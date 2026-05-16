@@ -1,33 +1,33 @@
 const express = require("express");
 
-const connectDB = require("../backend/src/config/db");
+const app = express();
 
-const jobrouter = require("../backend/src/routers/jobrouter");
+const connectDB = require("./src/config/db");
 
-const userLogin = require("./src/routers/userrouter");
+const jobrouter = require("./src/routers/jobrouter");
 
-
+const authentication = require("./src/routers/AuthRouter");
 
 require("dotenv").config();
 
-const app = express();
+
+
 app.use(express.json());
 
-app.use("/login",userLogin);
+app.use("/api/v1/auth",authentication);
 
-
-app.use("/jobs/users",jobrouter);
-
+app.use("/api/v1/job",jobrouter);
+// get 
 app.get("/login/test",(req,res)=>{
   console.log("user entered login");
 
   console.log(req.method);
   console.log(req.url);
-  
+
   res.send("login not yet created");
 });
 
-
+// post == create
 app.post("/jobs/:id",(req,res)=>{
   console.log("post  request recived from /jobs/:id ");
   console.log(req.body);
@@ -46,6 +46,7 @@ app.post("/jobs/:id",(req,res)=>{
 // CONNECT DATABASE
 connectDB();
 
+// server 
 app.get("/", (req, res) => {
   res.send("MahaaFix Backend Running 🚀");
 });

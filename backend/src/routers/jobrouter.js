@@ -2,12 +2,7 @@ const express = require("express");
 
 const jobrouter = express.Router();
 
-const {
-    createJobs,
-    getjobs
-} = require("../controllers/jobcontroller");
-
-
+const { createJobs, getjobs } = require("../controllers/jobcontroller");
 
 jobrouter.get("/worker",getjobs);
 
