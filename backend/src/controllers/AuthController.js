@@ -139,12 +139,14 @@ exports.Login= async (req,res)=>{
         const jwt = require("jsonwebtoken")
 
         const token = jwt.sign({
-            id: checkingExistance._id
+            id: checkingExistance._id,
+            email:checkingExistance.email, // what we want to use after token; we have to menction here those only, we can access from token..
+            role: checkingExistance.role
         },
         
             process.env.JWT_SECRET,
         {
-            expiresIn:"14d"
+            expiresIn:"14d" //14 days
         }
         );
 

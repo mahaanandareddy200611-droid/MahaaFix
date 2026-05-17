@@ -4,15 +4,18 @@ const app = express();
 
 const connectDB = require("./src/config/db");
 
+
+const userroutes = require("./src/routers/userrouter");
+
 const jobrouter = require("./src/routers/jobrouter");
 
 const authentication = require("./src/routers/AuthRouter");
 
 require("dotenv").config();
 
-
-
 app.use(express.json());
+
+app.use("/profile",userroutes);
 
 app.use("/api/v1/auth",authentication);
 
