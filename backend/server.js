@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 
 const app = express();
@@ -11,7 +13,7 @@ const jobrouter = require("./src/routers/jobrouter");
 
 const authentication = require("./src/routers/AuthRouter");
 
-require("dotenv").config();
+
 
 app.use(express.json());
 
