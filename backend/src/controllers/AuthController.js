@@ -45,7 +45,7 @@ exports.Signup = async(req,res)=>{
         }
         const HashedPassword = await bcrypt.hash(password,10)
         
-        const allowedRoles=["user","user + worker","Admin","operater"]
+        const allowedRoles=["user","worker","Admin","operater"]
         if(!allowedRoles.includes(role)){ // checking role is present in Allowed roles or not
             return res.status(400).json({
                 success:false,
