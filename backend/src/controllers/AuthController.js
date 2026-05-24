@@ -45,7 +45,7 @@ exports.Signup = async(req,res)=>{
         }
         const HashedPassword = await bcrypt.hash(password,10)
         
-        const allowedRoles=["user","worker","Admin","operater"]
+        const allowedRoles = ["customer","worker","admin","operator"];
         if(!allowedRoles.includes(role)){ // checking role is present in Allowed roles or not
             return res.status(400).json({
                 success:false,
@@ -83,7 +83,7 @@ exports.Signup = async(req,res)=>{
             console.log(error)
             return res.status(500).json({
                 success:false,
-                message:error.message // gives actual error
+                message:"server error ,try again " // dont write actual internal error  to user 
             })
         }
 
@@ -141,7 +141,9 @@ exports.Login= async (req,res)=>{
         const token = jwt.sign({
             id: checkingExistance._id,
             email:checkingExistance.email, // what we want to use after token; we have to menction here those only, we can access from token..
-            role: checkingExistance.role
+            role: checkingExistance.role,
+            name:checkingExistance.name,
+            mobileNumber:checkingExistance.mobileNumber
         },
         
             process.env.JWT_SECRET,

@@ -36,10 +36,18 @@ const userSchema = new mongoose.Schema({
     role:{
         
         type:String,
-        enum:['user','worker','Admin','operater'],
-        default:'user',
+        enum:["customer","worker","admin","operator"],
+        default:'customer',
         required:true
-    }
+    },
+    savedAddresses:[{
+      city:String,
+      street:String,
+      colony:String,
+      houseNo:String,
+      landMark:String,
+      label:String
+    }],
 }
 )
 const User = mongoose.model("User",userSchema)

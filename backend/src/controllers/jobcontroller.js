@@ -5,7 +5,7 @@ const Job = require("../models/job")
 exports.createJobs = async (req,res)=>{
     try {
         const {title,description,category,subCategory,address,mobileNumber,visualproofs,beforePhoto,beforeVideo,paymentStatus}=req.body
-        if((!title||!description||!category||!subCategory||!beforePhoto||!beforeVideo||!address||!mobileNumber)){
+        if((!title||!description||!category||!subCategory||!beforePhoto||!beforeVideo||!address)){
             return res.status(400).json({
                 success:false,
                 message:"Fill all required blanks",
@@ -25,6 +25,7 @@ exports.createJobs = async (req,res)=>{
             description,
             category,
             subCategory,
+            mobileNumber,
             
             address,
             customer:{
@@ -69,7 +70,7 @@ exports.getJobs= async (req,res)=>{
 
         return res.status(200).json({
             success:true,
-            message:"jobs featched successfully",
+            message:"jobs fetched successfully",
             data:jobs
         })
     }catch(error){
@@ -112,8 +113,7 @@ exports.getThisJob = async (req,res)=>{
     }
 }
 
-const Job = require("../models/job");
-const workflow = require("../utils/workflow");
+
 
 exports.updateStatus = async (req, res) => {
     try {

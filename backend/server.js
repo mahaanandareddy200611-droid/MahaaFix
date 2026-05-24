@@ -21,7 +21,7 @@ app.use("/profile",userroutes);
 
 app.use("/api/v1/auth",authentication);
 
-app.use("/api/v1/job",jobrouter);
+app.use("/api/v1/jobs",jobrouter);
 // get 
 app.get("/login/test",(req,res)=>{
   console.log("user entered login");

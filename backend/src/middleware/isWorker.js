@@ -14,7 +14,7 @@ try{
         console.log(req.user.name,req.user.email,"this worker online now!")
 
         next() 
-    }catch{
+    }catch(error){
         console.log(error)
         return res.status(500).json({
             success:false,
