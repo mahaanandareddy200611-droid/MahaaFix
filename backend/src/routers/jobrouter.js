@@ -1,21 +1,23 @@
 const express = require("express");
 const Auth = require("../middleware/Auth")
+const isAdmin = require("../middleware/isAdmin")
 const isWorker = require("../middleware/isWorker")
 const jobrouter = express.Router();
 
-const { createJobs ,getJobs,getThisJob,updateStatus } = require("../controllers/jobcontroller");
+const { createJobs,myJobs ,getJobs,getThisJob,AssignJob,Accepted,updateStatus } = require("../controllers/jobcontroller");
 
-jobrouter.get("/",Auth,getJobs);
+jobrouter.get("/", Auth, getJobs);
 
+jobrouter.get("/my-jobs", Auth, myJobs);
 
-jobrouter.get("/:id",Auth,isWorker,getThisJob);
+jobrouter.post("/create", Auth, createJobs);
 
+jobrouter.get("/:id", Auth, getThisJob);
 
-jobrouter.patch("/:id/status",Auth,updateStatus)
+jobrouter.post("/:id/assign",Auth,isAdmin,AssignJob)
 
+jobrouter.patch("/:id/accepted", Auth, isWorker, Accepted);
 
-
-jobrouter.post("/",Auth,createJobs);
-
+jobrouter.patch("/:id/status", Auth, updateStatus);
 
 module.exports=jobrouter;
