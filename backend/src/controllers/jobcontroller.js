@@ -1,5 +1,8 @@
 const workflow = require("../utils/workflow");
 
+const User = require("../models/User")
+
+
 const Job = require("../models/job")
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
@@ -7,12 +10,10 @@ const Job = require("../models/job")
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-
 exports.createJobs = async (req,res)=>{
     try {
-        const {title,description,category,subCategory,address,mobileNumber,visualproofs,beforePhoto,beforeVideo,paymentStatus,budget}=req.body
-        if((!title||!description||!category||!subCategory||!beforePhoto||!beforeVideo||!address||!budget)){
+        const {title,description,category,subCategory,address,mobileNumber,visualProofs,beforePhoto,beforeVideo,paymentStatus,budget}=req.body
+        if((!title||!description||!category||!subCategory||!beforePhoto||!beforeVideo||!address||budget==null)){
             return res.status(400).json({
                 success:false,
                 message:"Fill all required blanks",
@@ -72,8 +73,6 @@ exports.createJobs = async (req,res)=>{
 
 
 
-
-
 exports.myJobs=async  (req,res)=>{
     try {
         let jobs;
@@ -110,18 +109,13 @@ exports.myJobs=async  (req,res)=>{
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-
-
-
-
-
 exports.getJobs= async (req,res)=>{
 
     // fetch jobs for work 
     try{
-        const jobs = await Job.find().select("title category subCategory address.city address.street") // DB gives onle these selected  
-
+        const page = Number(req.query.page) || 0; // page must be defined   
+        const jobs = await Job.find({status="Created"}).select("title category subCategory address.city address.street") // DB gives onle these selected  
+                     .limit(20).skip(page*20)
         return res.status(200).json({
             success:true,
             message:"jobs fetched successfully",
@@ -136,12 +130,9 @@ exports.getJobs= async (req,res)=>{
     }
 }
 
-
-
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //        ||||||||||||||||||||||---------------------getThisJob------------------------------|||||||||||||||||||||||
 // --------------------------------------------------------------------------------------------------------------------------------------------
-
 
 
 exports.getThisJob = async (req,res)=>{
@@ -183,6 +174,60 @@ exports.getThisJob = async (req,res)=>{
 
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
+//        ||||||||||||||||||||||---------------------AssignJob------------------------------|||||||||||||||||||||||
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
+exports.AssignJob=async(req,res)=>{
+    try {
+        const job = await Job.findById(req.params.id)
+
+        if(!job){
+            return res.status(400).json({
+                success:false,
+                message:"Job not Found!!"
+            })
+        }
+        const worker = await User.findById(req.body.workerid)
+        if(!worker || worker.role !=="worker"){
+            return res.status(400).json({
+                success:false,
+                message:"no worker Found!"
+            })
+        }
+
+        const Assign = await Job.find({
+            "worker.workerid": req.body.workerid
+        })
+        if(Assign.length >= 5){            // now worker can take only 5 jobs at a time if get more wont be assigned;
+            return res.status(400).json({          
+                success:false,
+                message:"Worker busy"            })
+        }           
+        job.worker ={
+            workerid:req.body.workerid  // here only assign happens to worker
+        }
+        
+        job.status="Assigned"
+        await job.save()
+        return res.status(200).json({
+            message:"This job was assigned to you ",
+            success:true,
+            data:job
+        })
+        
+    } catch (error) {
+        console.log(error)
+
+        return res.status(500).json({
+            success:false,
+            message:"Server error, try Again"
+        })
+
+        
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------
 //        ||||||||||||||||||||||---------------------Accepted------------------------------|||||||||||||||||||||||
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -207,10 +252,10 @@ exports.Accepted = async(req,res)=>{
     })
 }
 
-        if(job.worker?.workerid){  // this search for worker? workerid if found it stops dubilicate accepts
+        if(!job.worker?.workerid||job.worker.workerid.toString() !==req.user.id){  // this search for worker? workerid if found it stops dubilicate accepts
             return res.status(403).json({
                 success:false,
-                message:"this job is already accepted by another worker!"
+                message:"you are not assigned to this job"
             })
         }
         job.worker={
@@ -289,9 +334,8 @@ exports.updateStatus = async (req, res) => {
             });
         }
 
-
         const isAdminOrOperator =
-            req.user.role === "Admin" ||
+            req.user.role === "admin" ||
             req.user.role === "operator";
 
 
@@ -349,3 +393,34 @@ exports.updateStatus = async (req, res) => {
 
     }
 };
+
+//                            |--------------------------------------------------------------|
+//                                               EstimateSubmitted
+//                            |--------------------------------------------------------------|
+
+exports.EstimateSubmitted = async (req,res) =>{
+    try {
+        const currentStatus = workflow[currentStatus]
+        if(currentStatus!==EstimateSubmitted){
+            return res.status(400).json({
+                success:false,
+                message:"you can do in this status"
+            })
+        }
+        return res.status(200).json({
+            success:true,
+            message:"Estimate Submitted"
+        })
+        
+    } catch (error) {
+
+        console.log(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Server error, try again"
+        });
+
+        
+    }
+}

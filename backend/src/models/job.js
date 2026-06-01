@@ -134,8 +134,22 @@ const jobSchema = new mongoose.Schema({
         AfterVideos:[{             // now these are like arrays  ==>> multible rooms 
             type:String,         
         }]
+    },
+    EstimateSubmitted:{
+        budget:{
+            type:Number,
+        },
+        actualProblem:{
+            type:String,
+        },
 
     },
+    ReworkRequired:{
+        proof:{
+            type:String
+        },
+    },
+    
     payments:{
         upfront:{
             type:Number,
