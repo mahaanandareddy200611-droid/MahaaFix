@@ -1,70 +1,29 @@
 const workflow = require("../utils/workflow");
-
+const asyncHandler = require("../middleware/asyncHandler")
+const AppError = require("../utils/AppError")
 const User = require("../models/User")
-
-
 const Job = require("../models/job")
+const jobservice = require("../services/jobservices")
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //        ||||||||||||||||||||||---------------------create jobs------------------------------|||||||||||||||||||||||
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 
-exports.createJobs = async (req,res)=>{
-    try {
-        const {title,description,category,subCategory,address,mobileNumber,visualProofs,beforePhoto,beforeVideo,paymentStatus,budget}=req.body
-        if((!title||!description||!category||!subCategory||!beforePhoto||!beforeVideo||!address||budget==null)){
-            return res.status(400).json({
-                success:false,
-                message:"Fill all required blanks",
+exports.createJobs = asyncHandler(async(req,res)=>{
 
-            })
-        } 
-        const subCateg = ["Electrical","Plumbing","AC-repair","House-cleaning","Bathroom-cleaning","ApplianceRepair"]
-        const categ  = ["repair","new-installation","inspection","cleaning","emergency"]     
-        if(!categ.includes(category)||!subCateg.includes(subCategory)){
-            return res.status(400).json({
-                success: false,
-                message:"choosen invalid category or subcategory"
-            })
-        }
-        const NewJOb = await Job.create({
-            title,
-            description,
-            category,
-            subCategory,
-            mobileNumber,
-            
-            address,
-            customer:{
-            userid:req.user.id,
-            name:req.user.name,
-            mobileNumber:req.user.mobileNumber
-                },
-            visualProofs: {
-                beforePhotos: beforePhoto || [],
-                beforeVideos: beforeVideo || []
-            },
+    const newJob = await jobservice.createJobs(
+        req.body,
+        req.user
+    );
 
-            payments: {
-                budget: budget,
-                paymentStatus: paymentStatus || "Pending"
-            }
-        })
-        return res.status(201).json({
-            success:true,
-            message :"Job created Successfully",
-            data:NewJOb
-        })
-    } catch (error) {
-        console.log(error)
-        return res.status(500).json({
-            success:false,
-            message:"server error"
+    return res.status(201).json({
+        success:true,
+        message:"Job created Successfully",
+        data:newJob
+    });
 
-        })
-    }
-}   
+});
 
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
@@ -73,159 +32,77 @@ exports.createJobs = async (req,res)=>{
 
 
 
-exports.myJobs=async  (req,res)=>{
-    try {
-        let jobs;
+exports.myJobs=asyncHandler(async  (req,res)=>{
 
-        if(req.user.role == "worker"){
-            jobs = await Job.find({"worker.workerid":req.user.id}).select("title category subCategory address.city address.street")
-        }
-        else if (req.user.role=="customer") {
-            jobs = await Job.find({"customer.userid":req.user.id}).select("title category subCategory address.city")
-            
-        }
-        else if(req.user.role=="admin"||req.user.role=="operator"){
-            jobs= await Job.find().select("title category subCategory address.city address.street")
-        }
+    const myJobs = await jobservice.myJobs(req.user,req.query)
+
 
         return res.status(200).json({
             success:true,
             message:"successfully , your jobs are",
-            data:jobs,
-        })
-    } catch (error) {
-        console.log(error)
-        return res.status(500).json({
-            success:false,
-            message:"server error"
-
-        })      
-        
-    }
-}
+            data:myJobs,
+        }        
+ ) }
+)
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //        ||||||||||||||||||||||---------------------getJobs------------------------------|||||||||||||||||||||||
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 
-exports.getJobs= async (req,res)=>{
+exports.getJobs=asyncHandler(async (req,res)=>{
 
     // fetch jobs for work 
-    try{
-        const page = Number(req.query.page) || 0; // page must be defined   
-        const jobs = await Job.find({status="Created"}).select("title category subCategory address.city address.street") // DB gives onle these selected  
-                     .limit(20).skip(page*20)
+    const jobs = await jobservice.getJobs(req.query)
+
         return res.status(200).json({
             success:true,
             message:"jobs fetched successfully",
             data: jobs
         })
-    }catch(error){
-        console.log(error)
-        return res.status(500).json({
-            success:false,
-            message:"Server error, try Again"
-        })
-    }
-}
+    })
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //        ||||||||||||||||||||||---------------------getThisJob------------------------------|||||||||||||||||||||||
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 
-exports.getThisJob = async (req,res)=>{
+exports.getThisJob = asyncHandler(async (req,res)=>{
 
-    try{
+    const thisJob =
+        await jobservice.getThisJob(req.params.id);
 
-        const job = await Job.findById(req.params.id)
-
-        if(!job){
-            return res.status(404).json({
-                success:false,
-                message:"Job not found"
-            })
+    return res.status(200).json({
+        success:true,
+        message:"Job fetched successfully",
+        data:{
+            address: thisJob.address,
+            category: thisJob.category,
+            subCategory: thisJob.subCategory,
+            beforePhotos:
+                thisJob.visualProofs.beforePhotos,
+            beforeVideos:
+                thisJob.visualProofs.beforeVideos
         }
+    });
 
-        return res.status(200).json({
-            success:true,
-            message:"Job fetched successfully",
-            data:{
-                address : job.address,
-                category: job.category,
-                subCategory:job.subCategory,
-                beforePhotos : job.visualProofs.beforePhotos,
-                beforeVideos : job.visualProofs.beforeVideos
-            }
-        })
-
-    }catch(error){
-
-        console.log(error)
-
-        return res.status(500).json({
-            success:false,
-            message:"Server error, try Again"
-        })
-
-    }
-}
-
+});
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //        ||||||||||||||||||||||---------------------AssignJob------------------------------|||||||||||||||||||||||
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-exports.AssignJob=async(req,res)=>{
-    try {
-        const job = await Job.findById(req.params.id)
+exports.AssignJob=asyncHandler(async(req,res)=>{
 
-        if(!job){
-            return res.status(400).json({
-                success:false,
-                message:"Job not Found!!"
-            })
-        }
-        const worker = await User.findById(req.body.workerid)
-        if(!worker || worker.role !=="worker"){
-            return res.status(400).json({
-                success:false,
-                message:"no worker Found!"
-            })
-        }
+        const job = await jobservice.AssignJob(req.job,req.body.workerid)
 
-        const Assign = await Job.find({
-            "worker.workerid": req.body.workerid
-        })
-        if(Assign.length >= 5){            // now worker can take only 5 jobs at a time if get more wont be assigned;
-            return res.status(400).json({          
-                success:false,
-                message:"Worker busy"            })
-        }           
-        job.worker ={
-            workerid:req.body.workerid  // here only assign happens to worker
-        }
-        
-        job.status="Assigned"
-        await job.save()
         return res.status(200).json({
             message:"This job was assigned to you ",
-            success:true,
+            success:true,   
             data:job
         })
         
-    } catch (error) {
-        console.log(error)
-
-        return res.status(500).json({
-            success:false,
-            message:"Server error, try Again"
-        })
-
-        
-    }
-}
+    } )
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //        ||||||||||||||||||||||---------------------Accepted------------------------------|||||||||||||||||||||||
@@ -233,56 +110,16 @@ exports.AssignJob=async(req,res)=>{
 
 
 
-exports.Accepted = async(req,res)=>{
-    try {
+exports.Accepted = asyncHandler(async(req,res)=>{
 
-        const job = await Job.findById(req.params.id) // defining that job
-
-        if(!job){
-            return res.status(404).json({
-                success:false,
-                message:"Job not found"
-            })
-        }
-
-        if(job.status !== "Assigned"){
-            return res.status(400).json({
-                success:false,
-                message:"Only assigned jobs can be accepted"
-    })
-}
-
-        if(!job.worker?.workerid||job.worker.workerid.toString() !==req.user.id){  // this search for worker? workerid if found it stops dubilicate accepts
-            return res.status(403).json({
-                success:false,
-                message:"you are not assigned to this job"
-            })
-        }
-        job.worker={
-            workerid:req.user.id,
-            name:req.user.name,
-            mobileNumber:req.user.mobileNumber
-        }
-        job.status = "WorkerAccepted"
-
-        await job.save()
+    const job = await jobservice.Accepted(req.job,req.user)
+        
         return res.status(200).json({
             success:true,
             message:"Successfully Accepted the work "
         })
         
-    } catch (error) {
-
-        console.log(error)
-
-        return res.status(500).json({
-            success:false,
-            message:"Server error, try Again"
-        })
-
-        
-    }
-}
+    } )
 
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
@@ -291,136 +128,120 @@ exports.Accepted = async(req,res)=>{
 
 
 
-exports.updateStatus = async (req, res) => {
-    try {
+exports.updateStatus = asyncHandler(async (req, res) => {
 
-        const { newStatus } = req.body;
+    const job = await jobservice.updateStatus(
+        req.job,
+        req.user,
+        req.body.newStatus
+    );
 
-        const job = await Job.findById(req.params.id);
-
-        if (!job) {
-            return res.status(404).json({
-                success: false,
-                message: "Job not found"
-            });
-        }
-
-        const currentStatus = job.status;
-
-        const currentWorkflow = workflow[currentStatus];
-
-        if (!currentWorkflow) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid current workflow state"
-            });
-        }
-
-        if (!currentWorkflow.next.includes(newStatus)) {
-            return res.status(400).json({
-                success: false,
-                message: `Cannot move from ${currentStatus} to ${newStatus}`
-            });
-        }
-
-        const allowedActors = currentWorkflow.actor;
-
-        const userRole = req.user.role;
-
-        if (!allowedActors.includes(userRole)) {
-            return res.status(403).json({
-                success: false,
-                message: `Only ${allowedActors.join(", ")} can update this status`
-            });
-        }
-
-        const isAdminOrOperator =
-            req.user.role === "admin" ||
-            req.user.role === "operator";
-
-
-        if (
-            userRole === "worker" &&
-            !isAdminOrOperator
-        ) {
-
-            // only assigned worker can update
-            if (
-                !job.worker?.workerid ||
-                job.worker.workerid.toString() !== req.user.id
-            ) {
-                return res.status(403).json({
-                    success: false,
-                    message: "This job is not assigned to you"
-                });
-            }
-        }
-
-        
-        if (
-            userRole === "customer" &&
-            !isAdminOrOperator
-        ) {
-
-            if (
-                job.customer.userid.toString() !== req.user.id
-            ) {
-                return res.status(403).json({
-                    success: false,
-                    message: "You are not the owner of this job"
-                });
-            }
-        }
-
-        job.status = newStatus;
-
-        await job.save();
 
         return res.status(200).json({
             success: true,
-            message: `Job status updated from ${currentStatus} to ${newStatus}`,
+            message:"Job status updated successfully",
             data: job
         });
 
-    } catch (error) {
+    } )
 
-        console.log(error);
 
-        return res.status(500).json({
-            success: false,
-            message: "Server error, try again"
-        });
+exports.reachedLocation = asyncHandler(async(req,res)=>{
+    const job = await jobservice.updateStatus( // same update of status but with this click
+        req.job,
+        req.user,
+        "Checking"
+    );
 
-    }
-};
+    res.status(200).json({
+        success:true,
+        data:job
+    });
+});
 
 //                            |--------------------------------------------------------------|
 //                                               EstimateSubmitted
 //                            |--------------------------------------------------------------|
 
-exports.EstimateSubmitted = async (req,res) =>{
-    try {
-        const currentStatus = workflow[currentStatus]
-        if(currentStatus!==EstimateSubmitted){
-            return res.status(400).json({
-                success:false,
-                message:"you can do in this status"
-            })
-        }
+exports.EstimateSubmitted =asyncHandler( async (req,res) =>{
+        
+        const {budget,actualProblem} = req.body
+
+        const job = await jobservice.EstimateSubmitted(req.job,req.user,budget,actualProblem);
+
+        await jobservice.updateStatus(job,req.user,"WaitingCustomerApproval")
+        
+        
         return res.status(200).json({
             success:true,
-            message:"Estimate Submitted"
+            message:"Estimate Submitted",
+            data:job
         })
         
-    } catch (error) {
+     }
+)
 
-        console.log(error);
 
-        return res.status(500).json({
-            success: false,
-            message: "Server error, try again"
-        });
+exports.Approval =asyncHandler( async (req,res) =>{
 
-        
+        const { decision }= req.body 
+        const allowed = [  "TemporaryFixApproved","InProgress","InspectionCompleted"]
+        if(!allowed.includes(decision)){
+            throw new AppError("wrong responce",400);           
+        }
+
+        await jobservice.updateStatus(req.job,req.user,decision);
+
+        return res.status(200).json({
+            success:true,
+            message:`Job moved to ${decision} `
+        })
+    } )
+
+exports.WorkCompleted= asyncHandler(async(req,res)=>{
+
+    const {afterPhotos ,afterVideos} = req.body
+
+    const newJob = await jobservice.WorkCompleted(
+        req.job,req.user, afterPhotos ,afterVideos
+    );
+
+    await jobservice.updateStatus(req.job,req.user,"WorkCompleted");
+
+    return res.status(200).json({
+            success:true,
+            message: "Work completed successfully",
+            data:newJob
+        })   
+})
+
+exports.ReworkRequired = asyncHandler(async(req,res)=>{
+    const {reworkProof} = req.body
+
+    if(!reworkProof){
+        throw new AppError(
+            "Rework proof is required",
+            400
+        );
     }
-}
+
+    const job = await jobservice.ReworkRequired(req.job,req.user,reworkProof)
+
+    await jobservice.updateStatus(req.job,req.user,"ReworkRequired")
+
+    res.status(200).json({
+        seccess:true,
+        data:job
+    })
+
+
+})
+
+exports.verified = asyncHandler(async(req,res)=>{
+    const job = await jobservice.updateStatus(req.job,req.user,"Verified")
+
+    res.status(200).json({
+        seccess:true,
+        data:job
+    })
+})

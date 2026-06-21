@@ -1,16 +1,14 @@
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+const AppError = require("../utils/AppError");
 
 const Auth = async(req , res, next)=>{
-    try{
+    
         // here we get token like this 
         const AuthHeader = req.headers.authorization;
 
         if(!AuthHeader){
             console.log("token does not exist ")
-            return res.status(401).json({
-                success:false,
-                message:"token not found !"
-            });
+            throw new AppError("token not found! , please Login",403)
         }
         const token = AuthHeader.split(" ")[1];
         // now we have token lets verify it .
@@ -33,13 +31,5 @@ const Auth = async(req , res, next)=>{
         // })
 
         next();
-    }catch(error){
-        console.log(error)
-        res.status(401).json({
-            success:false,
-            message:error.message
-        });
-
     }
-}
 module.exports=Auth;

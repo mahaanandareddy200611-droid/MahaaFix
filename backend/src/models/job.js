@@ -4,22 +4,22 @@ const mongoose = require("mongoose")
 const jobSchema = new mongoose.Schema({
     title:{
         type:String,
-        required:true,
+        required:[true,"please give what major problem"],
         maxlength:100,
     },
     description:{
         type:String,
-        required:true
+        required:[true,"explain about the problem "]
     },
     category:{
         type:String,
         enum:['repair','new-installation','inspection','cleaning','emergency'],
-        required:true
+        required:[true,"choose from category"]
     },
     subCategory:{
         type:String,
         enum:['Electrical','Plumbing','AC-repair','House-cleaning','Bathroom-cleaning','ApplianceRepair'],
-        required:true
+        required:[true,"this subCategory not available for service"]
     },
     status:{
         type:String,
@@ -42,23 +42,23 @@ const jobSchema = new mongoose.Schema({
     address:{
         city:{
             type:String,
-            required:true,
+            required:[true,"please menction city"]
         },
         street:{
             type:String,
-            required:true},
+            required:[true , "please menction street"], },
         colony:{
             type:String,
             },
         houseNo:{
             type:String,
-            required:true},
+            required:[true,"please menction the house number"]},
         landMark:{
             type:String,
             },
         newMobile:{
             type:String,
-            required:true
+            required:[true,"please conform mobile number"],
         },
     gpsLocation:{
         longitude:{
@@ -120,18 +120,18 @@ const jobSchema = new mongoose.Schema({
     visualProofs:{
         beforePhotos:[{
             type:String,
-            required:true
+            required:[true, "please upload photos of where problem exists"]
         }],
         
         beforeVideos:[{
             type:String,  // these are strings because  "https://cloudinary.com/video123.mp4"
             required:true
         }],
-        AfterPhotos:[{
+        afterPhotos:[{
             type:String,
                                  // here we are using Square brackets because for 
         }],                     //    what if worker uploads 5 photos?            ans : it stores all of them 
-        AfterVideos:[{             // now these are like arrays  ==>> multible rooms 
+        afterVideos:[{             // now these are like arrays  ==>> multible rooms 
             type:String,         
         }]
     },
@@ -145,9 +145,7 @@ const jobSchema = new mongoose.Schema({
 
     },
     ReworkRequired:{
-        proof:{
-            type:String
-        },
+        proof:[{type:String}],
     },
     
     payments:{
@@ -157,7 +155,7 @@ const jobSchema = new mongoose.Schema({
         },
         budget:{
             type:Number,
-            required:true
+        
         },
         paymentStatus:{
         type:String,

@@ -1,55 +1,59 @@
 const workflow ={
     Created:{
     next:["Assigned"],
-    actor:["system"]
+    actor:["admin","operator"]
     },
     Assigned:{
         next:["WorkerAccepted"],
-        actor:["worker"]
+        actor:["worker","admin","operator"]
     },
     WorkerAccepted:{
         next:["Checking"],
-        actor:["worker"]
+        actor:["worker","admin","operator"]
     },
     Checking:{
-        next:["Reject","EstimateSubmitted"],
-        actor:["worker"]
+        next:["Reject","WaitingCustomerApproval"],
+        actor:["worker","admin","operator"]
     },
-    EstimateSubmitted:{
-        next:["WaitingCustomerApproval","TemporaryFixApproved","Reject"],
-        actor:["worker"]
-    },
+    // EstimateSubmitted:{
+    //     next:["WaitingCustomerApproval","TemporaryFixApproved","Reject"],
+    //     actor:["worker"]
+    // },
     WaitingCustomerApproval:{
-   next:["TemporaryFixApproved","InProgress","Reject"],
-   actor:["customer"]
+   next:["TemporaryFixApproved","InProgress","InspectionCompleted"],
+   actor:["customer","admin","operator"]
 },
     TemporaryFixApproved:{
         next:["InProgress"],
-        actor:["customer"]
+        actor:["customer","admin","operator"]
     },
+    InspectionCompleted:{
+    next:[],
+    actor:["customer","admin","operator"]
+},
     Reject:{
         next:[],
         actor:["customer","worker","admin","system"]
     },
     InProgress:{
         next:["WorkCompleted"],
-        actor:['worker']
+        actor:["worker","admin","operator"]
     },
     WorkCompleted:{
-        next:["VerificationPending"],
-        actor:["worker"]
-    },
-    VerificationPending:{
         next:["Verified","ReworkRequired"],
-        actor:["customer"]
+        actor:["customer","admin","operator"]
     },
+    // VerificationPending:{
+    //     next:["Verified","ReworkRequired"],
+    //     actor:["customer"]
+    // },
     ReworkRequired:{
         next:["InProgress"],
-        actor:["customer"]  
+        actor:["worker","admin","operator"]  
     },
     Verified:{
         next:[],
-        actor:["customer"]
+        actor:["customer","admin","operator"]
     }
 }
 module.exports = workflow;

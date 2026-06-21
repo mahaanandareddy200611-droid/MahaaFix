@@ -6,6 +6,7 @@ const app = express();
 
 const connectDB = require("./src/config/db");
 
+const errorHandler = require("./src/middleware/errorHandler");
 
 const userroutes = require("./src/routers/userrouter");
 
@@ -46,7 +47,7 @@ app.post("/jobs/:id",(req,res)=>{
   });
   
 });
-
+app.use(errorHandler);        //              error handleing should be at last 
 
 // CONNECT DATABASE
 connectDB();
