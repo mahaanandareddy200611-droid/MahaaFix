@@ -1,9 +1,9 @@
-const workflow = require("../utils/workflow");
-const asyncHandler = require("../middleware/asyncHandler")
-const AppError = require("../utils/AppError")
-const User = require("../models/User")
-const Job = require("../models/job")
-const jobservice = require("../services/jobservices")
+const workflow = require("../../utils/workflow");
+const asyncHandler = require("../../middleware/asyncHandler")
+const AppError = require("../../utils/AppError")
+const User = require("../../models/User")
+const Job = require("../../models/job")
+const jobservice = require("./Job.Services")
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //        ||||||||||||||||||||||---------------------create jobs------------------------------|||||||||||||||||||||||
@@ -231,6 +231,7 @@ exports.ReworkRequired = asyncHandler(async(req,res)=>{
 
     res.status(200).json({
         seccess:true,
+        message:"Rework submitted",
         data:job
     })
 
@@ -242,6 +243,7 @@ exports.verified = asyncHandler(async(req,res)=>{
 
     res.status(200).json({
         seccess:true,
+        message:"job success fully completed",
         data:job
     })
-})
+});

@@ -1,9 +1,9 @@
-const User = require("../models/User")
-const asyncHandler = require("../middleware/asyncHandler");
-const authservice = require("../services/authservice");
+const User = require("../../models/User")
+const asyncHandler = require("../../middleware/asyncHandler");
+const authservice = require("../../services/authservice");
 
 const bcrypt = require("bcryptjs")
-const AppError = require("../utils/AppError")
+const AppError = require("../../utils/AppError")
 
 //                                   |------------------------------------------|
 //                                               from here Sign up

@@ -40,6 +40,7 @@ const userSchema = new mongoose.Schema({
         default:'customer',
         required:true
     },
+                     
     savedAddresses:[{
       city:String,
       street:String,
@@ -48,8 +49,16 @@ const userSchema = new mongoose.Schema({
       landMark:String,
       label:String
     }],
+    
 }
 )
+userSchema.index({
+email:1
+});
+
+userSchema.index({
+mobileNumber:1
+});
 
 const User = mongoose.model("User",userSchema)
 

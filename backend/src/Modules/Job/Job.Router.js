@@ -1,14 +1,14 @@
 const express = require("express");
-const Auth = require("../middleware/Auth")
-const isAdmin = require("../middleware/isAdmin")
-const isWorker = require("../middleware/isWorker")
-const isAssignedWorker = require("../middleware/isAssignedWorker");
-const inJobWorkers = require("../middleware/inJobWorkers")
-const loadJob = require("../middleware/loadJob")
+const Auth = require("../../middleware/Auth")
+const isAdmin = require("../../middleware/isAdmin")
+const isWorker = require("../../middleware/isWorker")
+const isAssignedWorker = require("../../middleware/isAssignedWorker");
+const inJobWorkers = require("../../middleware/inJobWorkers")
+const loadJob = require("../../middleware/loadJob")
 const { createJobs,myJobs ,getJobs,getThisJob,AssignJob,Accepted,updateStatus,
-    reachedLocation,EstimateSubmitted,Approval,WorkCompleted,verified,ReworkRequired } = require("../controllers/jobcontroller");
-const  validate  = require("../validators/validate");
-const { createjob } = require("../validators/jobValidation");
+    reachedLocation,EstimateSubmitted,Approval,WorkCompleted,verified,ReworkRequired } = require("./Job.Controller");
+const  validate  = require("../../utils/validate");
+const { createjob } = require("./Job.Validator");
 
 const jobrouter = express.Router();
 
@@ -21,7 +21,7 @@ jobrouter.post("/create", Auth,validate(createjob),createJobs);
 
 jobrouter.get("/:id", Auth,loadJob, getThisJob);
 
-jobrouter.post("/:id/assign",Auth,isAdmin,loadJob,AssignJob)
+jobrouter.post("/:id/assign",Auth,loadJob,isAdmin,AssignJob)
 
 jobrouter.patch("/:id/accepted", Auth, isWorker,loadJob, Accepted);
 

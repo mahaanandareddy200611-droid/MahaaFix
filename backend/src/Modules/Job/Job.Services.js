@@ -1,7 +1,7 @@
-const Job = require("../models/job");
-const AppError = require("../utils/AppError");
-const User = require("../models/User");
-const workflow = require("../utils/workflow")
+const Job = require("../../models/job");
+const AppError = require("../../utils/AppError");
+const User = require("../../models/User");
+const workflow = require("../../utils/workflow")
 
 exports.createJobs=async(data,user)=>{
 
@@ -82,6 +82,12 @@ exports.getJobs=async(query)=>{
 exports.getThisJob = async(id)=>{
 
     const job = await Job.findById(id)
+
+    if(!job){throw new AppError(
+            "Job not found",404
+        );
+
+}
 
     return job
 }

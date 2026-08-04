@@ -8,7 +8,7 @@ const isAssignedWorker =asyncHandler (async(req,res,next)=>{
     if(!job){
     throw new AppError("Job not found!",404)}
     
-    if(job.worker?.workerid ||
+    if(!job.worker?.workerid ||
     job.worker.workerid.toString() !== req.user.id){
         throw new AppError("you are not authorized to do this",403);
     }

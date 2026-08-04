@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken")
-const AppError = require("../utils/AppError")
-const user = require("../models/User")
-const userservice = require("../services/authservice")
+const AppError = require("../../utils/AppError")
+const user = require("../../models/User")
+const userservice = require("./User.Service")
 
 exports.profile= async(req,res)=>{
 

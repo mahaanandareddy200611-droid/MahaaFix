@@ -1,3 +1,4 @@
+const { required } = require("joi");
 const mongoose = require("mongoose")
 
 
@@ -118,23 +119,22 @@ const jobSchema = new mongoose.Schema({
         }
     },
     visualProofs:{
-        beforePhotos:[{
-            type:String,
-            required:[true, "please upload photos of where problem exists"]
-        }],
+        beforeMedia:[
+    {
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Media",
         
-        beforeVideos:[{
-            type:String,  // these are strings because  "https://cloudinary.com/video123.mp4"
-            required:true
-        }],
-        afterPhotos:[{
-            type:String,
-                                 // here we are using Square brackets because for 
-        }],                     //    what if worker uploads 5 photos?            ans : it stores all of them 
-        afterVideos:[{             // now these are like arrays  ==>> multible rooms 
-            type:String,         
-        }]
     },
+    
+    ],
+    required:[true, "please upload phoes and video of ptoblem"],
+    afterMedia:[
+    {
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Media"
+    }
+    ],
+
     EstimateSubmitted:{
         budget:{
             type:Number,
@@ -165,8 +165,40 @@ const jobSchema = new mongoose.Schema({
         
     },
 
-    },
+    }},
     {timestamps:true})
+    jobSchema.index({
+status:1
+});
+
+jobSchema.index({
+category:1
+});
+
+jobSchema.index({
+subCategory:1
+});
+
+jobSchema.index({
+createdAt:-1
+});
+
+jobSchema.index({
+"customer.userid":1
+});
+
+jobSchema.index({
+"worker.workerid":1
+});
+
+jobSchema.index({
+"address.city":1
+});
+
+jobSchema.index({
+status:1,
+category:1
+});
 
     const Job = mongoose.model("Job",jobSchema)
     module.exports=Job

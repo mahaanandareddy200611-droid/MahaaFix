@@ -1,5 +1,5 @@
-const AppError = require("../utils/AppError");
-const User = require("../models/User");
+const AppError = require("../../utils/AppError");
+const User = require("../../models/User");
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 

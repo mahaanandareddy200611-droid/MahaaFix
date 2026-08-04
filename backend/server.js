@@ -1,28 +1,24 @@
 require("dotenv").config();
 
 const express = require("express");
-
 const app = express();
 
 const connectDB = require("./src/config/db");
-
 const errorHandler = require("./src/middleware/errorHandler");
 
 const userroutes = require("./src/routers/userrouter");
-
 const jobrouter = require("./src/routers/jobrouter");
-
 const authentication = require("./src/routers/AuthRouter");
-
-
+const documentsRouter = require("./src/routers/documentsRouter");
 
 app.use(express.json());
 
-app.use("/profile",userroutes);
+// routes
+app.use("/profile", userroutes);
+app.use("/api/v1/auth", authentication);
+app.use("/api/v1/jobs", jobrouter);
+app.use("/api/v1/documents", documentsRouter);
 
-app.use("/api/v1/auth",authentication);
-
-app.use("/api/v1/jobs",jobrouter);  
 // get 
 app.get("/login/test",(req,res)=>{
   console.log("user entered login");
@@ -47,6 +43,7 @@ app.post("/jobs/:id",(req,res)=>{
   });
   
 });
+
 app.use(errorHandler);        //              error handleing should be at last 
 
 // CONNECT DATABASE

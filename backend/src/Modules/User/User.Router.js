@@ -2,9 +2,9 @@
 
     const userroutes= express.Router();
 
-    const {profile} =  require("../controllers/usercontroller");
+    const {profile} =  require("./User.Controller");
 
-    const Auth = require("../middleware/Auth");
+    const Auth = require("../../middleware/Auth");
 
     userroutes.get("/",Auth,profile);
 
