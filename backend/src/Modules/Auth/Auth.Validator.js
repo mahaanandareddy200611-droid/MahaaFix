@@ -1,7 +1,7 @@
 const joi = require("joi")
 
 exports.signup= joi.object({
-    name : joi.string().required(),
+    name : joi.string().trim().required(),
 
     age : joi.number().min(18).required(),
 
@@ -11,7 +11,7 @@ exports.signup= joi.object({
 
     mobileNumber: joi.string().pattern(/^[0-9]{10}$/).required(),
 
-    role: joi.string().default("customer").valid("customer","worker","admin","operator").required(),
+    role: joi.string().default("customer").valid("customer","worker").required(),
 
     savedAddresses: joi.object({
     city:joi.string().required(),

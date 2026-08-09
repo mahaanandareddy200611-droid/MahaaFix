@@ -5,7 +5,7 @@ const userservice = require("./User.Service")
 
 exports.profile= async(req,res)=>{
 
-        const data = userservice.profile(req.user)
+        const data = await userservice.profile(req.user)
         const {name,email,mobileNumber,age,role}= data
 
         return res.status(200).json({

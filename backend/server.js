@@ -2,22 +2,24 @@ require("dotenv").config();
 
 const express = require("express");
 const app = express();
-
+const cors = require("cors")
 const connectDB = require("./src/config/db");
 const errorHandler = require("./src/middleware/errorHandler");
 
-const userroutes = require("./src/routers/userrouter");
-const jobrouter = require("./src/routers/jobrouter");
-const authentication = require("./src/routers/AuthRouter");
-const documentsRouter = require("./src/routers/documentsRouter");
-
+const userroutes = require("./src/Modules/User/User.Router");
+const jobrouter = require("./src/Modules/Job/Job.Router");
+const authentication = require("./src/Modules/Auth/Auth.Router");
+// const Media = require("./src/Modules/Media/Media.Router");
+app.use(cors({
+    origin: "http://localhost:5173"
+}));
 app.use(express.json());
 
 // routes
 app.use("/profile", userroutes);
 app.use("/api/v1/auth", authentication);
 app.use("/api/v1/jobs", jobrouter);
-app.use("/api/v1/documents", documentsRouter);
+// app.use("/api/v1/Media", Media);
 
 // get 
 app.get("/login/test",(req,res)=>{

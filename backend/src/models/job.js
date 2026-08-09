@@ -118,22 +118,21 @@ const jobSchema = new mongoose.Schema({
             }
         }
     },
-    visualProofs:{
-        beforeMedia:[
-    {
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Media",
-        
-    },
-    
+visualProofs: {
+    beforeMedia: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Media"
+        }
     ],
-    required:[true, "please upload phoes and video of ptoblem"],
-    afterMedia:[
-    {
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Media"
-    }
-    ],
+
+    afterMedia: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Media"
+        }
+    ]
+},
 
     EstimateSubmitted:{
         budget:{
@@ -145,8 +144,10 @@ const jobSchema = new mongoose.Schema({
 
     },
     ReworkRequired:{
-        proof:[{type:String}],
-    },
+        profilePicture: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Media"
+}},
     
     payments:{
         upfront:{
@@ -165,7 +166,7 @@ const jobSchema = new mongoose.Schema({
         
     },
 
-    }},
+    },
     {timestamps:true})
     jobSchema.index({
 status:1

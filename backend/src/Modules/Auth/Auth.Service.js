@@ -6,9 +6,10 @@ const jwt = require("jsonwebtoken")
 
 exports.Signup = async(name,email,password,age,role,mobileNumber)=>{
     
-    const checkingExistance = await User.findOne({email})
+    const checkingExistance = await User.findOne({email
+    })
         if(checkingExistance){
-            throw new AppError("you already had an account please, LOGIN ");
+            throw new AppError("you already had an account please, LOGIN ",400);
             
         }
 
@@ -20,7 +21,7 @@ exports.Signup = async(name,email,password,age,role,mobileNumber)=>{
             password:HashedPassword,
             age,
             mobileNumber,
-            role
+            role:"customer"
         })
 
     return createUser;
@@ -54,10 +55,20 @@ exports.Login = async(email,password)=>{
         
             process.env.JWT_SECRET,
         {
-            expiresIn:"14d" //14 days
+            expiresIn:"1d"            //14d => 14 days
         }
         );
 
-        return token
+        return {
+    token,
+    user: {
+        id: checkingExistance._id,
+        name: checkingExistance.name,
+        email: checkingExistance.email,
+        mobileNumber: checkingExistance.mobileNumber, // for to use in these details in frontend
+        age: checkingExistance.age,
+        role: checkingExistance.role
+    }
+};
 
 }

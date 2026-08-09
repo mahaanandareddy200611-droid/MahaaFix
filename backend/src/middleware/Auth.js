@@ -8,7 +8,12 @@ const Auth = async(req , res, next)=>{
 
         if(!AuthHeader){
             console.log("token does not exist ")
-            throw new AppError("token not found! , please Login",403)
+            throw new AppError("token not found! , please Login",401)
+        }
+
+        if(!AuthHeader.startsWith("Bearer ")){
+            throw new AppError("Invalid authorization format.",401);
+            
         }
         const token = AuthHeader.split(" ")[1];
         // now we have token lets verify it .

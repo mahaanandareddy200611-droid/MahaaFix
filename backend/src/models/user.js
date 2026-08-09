@@ -40,6 +40,7 @@ const userSchema = new mongoose.Schema({
         default:'customer',
         required:true
     },
+
                      
     savedAddresses:[{
       city:String,
@@ -52,13 +53,7 @@ const userSchema = new mongoose.Schema({
     
 }
 )
-userSchema.index({
-email:1
-});
 
-userSchema.index({
-mobileNumber:1
-});
 
 const User = mongoose.model("User",userSchema)
 

@@ -1,6 +1,6 @@
 const User = require("../../models/User")
 const asyncHandler = require("../../middleware/asyncHandler");
-const authservice = require("../../services/authservice");
+const authservice = require("../Auth/Auth.Service");
 
 const bcrypt = require("bcryptjs")
 const AppError = require("../../utils/AppError")
@@ -37,11 +37,13 @@ exports.Signup = asyncHandler(async(req,res)=>{
 exports.Login= asyncHandler(async (req,res)=>{
     
         const {email,password} =req.body
-        const token =await authservice.Login(email,password) 
+        const result =await authservice.Login(email,password) 
 
         return res.status(200).json({
             success:true,
-            message:"Login Successful", token
+            message:"Login Successful",
+            token:result.token,
+            user:result.user
 })
         
 
