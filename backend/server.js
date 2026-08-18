@@ -9,6 +9,7 @@ const errorHandler = require("./src/middleware/errorHandler");
 const userroutes = require("./src/Modules/User/User.Router");
 const jobrouter = require("./src/Modules/Job/Job.Router");
 const authentication = require("./src/Modules/Auth/Auth.Router");
+const WorkRecords = require("./src/Modules/WorkRecord/WorkRecord.Router")
 // const Media = require("./src/Modules/Media/Media.Router");
 app.use(cors({
     origin: "http://localhost:5173"
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use("/profile", userroutes);
 app.use("/api/v1/auth", authentication);
 app.use("/api/v1/jobs", jobrouter);
+app.use("/api/v1/work",WorkRecords);
 // app.use("/api/v1/Media", Media);
 
 // get 

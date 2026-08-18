@@ -55,7 +55,7 @@ exports.Login = async(email,password)=>{
         
             process.env.JWT_SECRET,
         {
-            expiresIn:"1d"            //14d => 14 days
+            expiresIn:"14d"            //14d => 14 days
         }
         );
 

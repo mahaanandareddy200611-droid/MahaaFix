@@ -45,14 +45,14 @@ exports.myJobs=async(user,query)=>{
         let jobs;
 
     if(user.role === "worker"){
-            jobs = await Job.find({"worker.workerid":user.id,...filter}).select("title category subCategory address.city address.street")
+            jobs = await Job.find({"worker.workerid":user.id,...filter}).select("title category subCategory address.city address.street").limit(20).skip(page*10)
         }
     else if (user.role==="customer") {
-            jobs = await Job.find({"customer.userid":user.id,...filter}).select("title category subCategory address.city")
+            jobs = await Job.find({"customer.userid":user.id,...filter}).select("title category subCategory address.city").limit(20).skip(page*10)
             
         }
     else if(user.role==="admin"||user.role=="operator"){
-            jobs= await Job.find(filter).select("title category subCategory address.city address.street")
+            jobs= await Job.find(filter).select("title category subCategory address.city address.street userid workerid").limit(20).skip(page*10)
         }
     
 

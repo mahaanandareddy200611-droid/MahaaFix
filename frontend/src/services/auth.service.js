@@ -9,5 +9,5 @@ export const Signup = (data) => {
 };
 
 export const Dashboard = ()=>{
-    return api.get("api/vi/jobs//my-jobs")
+    return api.get("api/v1/jobs/my-jobs")
 }

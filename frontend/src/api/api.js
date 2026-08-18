@@ -17,6 +17,7 @@ api.interceptors.request.use( // before request goes out.   interceptors → Axi
     },
 
     (error) => {
+        console.log(error)
         return Promise.reject(error);
     }
 );

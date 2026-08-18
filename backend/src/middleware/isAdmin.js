@@ -2,7 +2,8 @@ const jwt = require("jsonwebtoken")
 const AppError = require("../utils/AppError");
 const IsAdmin = async(req,res,next)=>{
 
-    const AdminEmails = ["adminofmahaafixone@gmail.com","admin@gmail.com"];
+    const AdminEmails = process.env.ADMIN_EMAIL;
+
 
         if((req.user.role)!=="admin" || (!AdminEmails.includes(req.user.email))){
             console.log("tried to enter as a Admin")

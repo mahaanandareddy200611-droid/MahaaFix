@@ -24,7 +24,7 @@ function Login() {
             console.log("Login response:", response.data);
             const token = response.data.token;
             const user = response.data.user;
-            localStorage.setItem("Token stored :",token)
+            localStorage.setItem("token",token)
             localStorage.setItem("user", JSON.stringify(user));
             alert("Login sucessfull")
 
@@ -35,7 +35,7 @@ function Login() {
             
         } catch (error) {
             console.log("Login error:", error);
-            console.log("Backend Responce:",error.responce?.message)
+            console.log("Backend Responce:",error.response?.data)
 
             alert(error.response?.data?.message||"Login failed")
         }
