@@ -12,25 +12,25 @@ exports.allWorkRecords= asyncHandler(async (req,res) => {
 })
 // CREATE
 exports.createWorkRecord= asyncHandler(async (req,res) => {
-    const postWorkRecord = await(WorkRecordService.createWorkRecord(req.body,req.user))
+    const postWorkRecord = await(WorkRecordService.createWorkRecordService(req.body,req.user))
     console.log("BODY:", body);
     console.log("AUTH USER:", user);
     return res.status(201).json({
         success:true,
         data:postWorkRecord,
-        message:"successfully , workRecord posted",
+        message:"successfully , workRecord created",
     })
 })
 
-exports.getmyWorkRecords= asyncHandler(async (req,res) => {
-    const getmyWorkRecord = await(WorkRecordService.WorkRecord(req.user,req.query)) 
+// exports.getmyWorkRecords= asyncHandler(async (req,res) => {
+//     const getmyWorkRecord = await(WorkRecordService.WorkRecord(req.user,req.query)) 
 
-    return res.status(200).json({
-        success:true,
-        data:getmyWorkRecord,
-        message:"successfully , workRecords are Available",
-    })
-})
+//     return res.status(200).json({
+//         success:true,
+//         data:getmyWorkRecord,
+//         message:"successfully , workRecords are Available",
+//     })
+// })
 
 exports.WorkRecordofWorker = asyncHandler(async (req,res) => {
     const getWorkRecord = await(WorkRecordService.getWorkRecord(req.user,req.query))  

@@ -3,10 +3,12 @@ const jwt = require("jsonwebtoken")
 const IsWorker = async(req,res,next)=>{
 
     // const AdminEmails = ["adminofmahaafixone@gmail.com","admin@gmail.com"]; like this there will be no seperate e mails for workers
-
-        if((req.user.role)!=="worker" ){
+    if (!req.user) {
+        throw new AppError("Authentication required", 401);
+    }
+    if((req.user.role)!=="worker" ){
             
-            throw new AppError("you are not authorized to do this");
+        throw new AppError("you are not authorized to do this");
             
     }
         console.log(req.user.name,req.user.email,"this worker online now!")

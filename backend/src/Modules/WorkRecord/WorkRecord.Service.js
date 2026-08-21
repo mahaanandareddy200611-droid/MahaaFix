@@ -27,11 +27,11 @@ exports.allWorkRecords=async(query)=>{
             filter.city=query.city
         }
         
-        const workRecords = await workRecord.find(filter).populate("worker","name").select("title worker.name type category city").skip((page - 1) * limit).limit(limit)
+        const workRecords = await WorkRecord.find(filter).populate("worker","name").select("title worker.name type category city").skip((page - 1) * limit).limit(limit)
         return workRecords
 }
 
-exports.createWorkRecord = async (body, user) => {
+exports.createWorkRecordService = async (body, user) => {
 
     const record = await WorkRecord.create({
 
@@ -49,8 +49,6 @@ exports.createWorkRecord = async (body, user) => {
 
         customer: body.customer,
 
-        createdBy: user._id,
-
         amount: body.amount,
 
         visibility: body.visibility,
@@ -63,50 +61,86 @@ exports.createWorkRecord = async (body, user) => {
     });
     return record;
 };
+exports.getWorkRecord = async (user, query) => {
+    if (!user) {
+        throw new AppError("Unauthorized", 401);
+    }
 
-exports.getmyWorkRecords=async(user,query)=>{
+    const page = Number(query.page) || 1;
 
-        const page = Number(query.page)||1
     const filter = {
-        visibility:{$in:["public","private"]},}
-        if(query.category){
-            filter.category = query.category
-        }
-        if(query.type){
-            filter.type =query.type
-        }
-        if(query.title){
-            filter.title=query.title
-        }
-        if (query.workerName) {
-            filter["worker.name"] = query.workerName;
-        }
-        if(query.city){
-            filter.city=query.city
-        }
+        worker: user.id,
+        visibility: { $in: ["public", "private"] }
+    };
 
-        let jobs;
-    if(!user){
-       throw new AppError("Unauthorized",403)
-        }
-    
+    // Filters
+    if (query.category) {
+        filter.category = query.category;
+    }
+
+    if (query.type) {
+        filter.type = query.type;
+    }
+
+    if (query.title) {
+        filter.title = { $regex: query.title, $options: "i" };
+    }
+
+    if (query.city) {
+        filter.city = { $regex: query.city, $options: "i" };
+    }
+
+    const workRecords = await WorkRecord.find(filter)
+        .select(
+            "title category type city amount visibility customerWhatsappNumber engagementType description worker"
+        )
+        .populate("worker", "name")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+    return workRecords;
+};
 
 
-    if(workRecord.visibility==="private"){
-            jobs = await workRecord.find({createdBy:user.id, ...filter})
-            .select("title category type city amount visibility customerWhatsappNumber engagementType description worker").skip((page - 1) * limit).limit(limit)
-        }
-    else if(workRecord.visibility==="public"){
-            jobs = await workRecord.find({createdBy:user.id, ...filter})
-            .select("title category type city amount visibility customerWhatsappNumber engagementType description worker").skip((page - 1) * limit).limit(limit)
-        }
-    // else if(user.role==="admin"||user.role=="operator"){
-    //         jobs= await workRecord.find(filter)
-    // .select("title category type city amount visibility customerWhatsappNumber engagementType description worker").skip((page - 1) * limit).limit(limit)
-    
-    // }
-    return jobs
-}
+exports.getWorkRecord = async (user, query) => {
+    if (!user) {
+        throw new AppError("Unauthorized", 401);
+    }
+
+    const page = Number(query.page) || 1;
+
+    const filter = {
+        worker: user.id
+    };
+
+    if (query.category) {
+        filter.category = query.category;
+    }
+
+    if (query.type) {
+        filter.type = query.type;
+    }
+
+    if (query.title) {
+        filter.title = { $regex: query.title, $options: "i" };
+    }
+
+    if (query.city) {
+        filter.city = { $regex: query.city, $options: "i" };
+    }
+
+    const records = await WorkRecord.find(filter)
+        .select(
+            "title category type city amount visibility customerWhatsappNumber engagementType description worker"
+        )
+        .populate("worker", "name")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+    return records;
+};
 
 exports.getThisWorkRecord = async (user, id) => {
 
@@ -124,6 +158,9 @@ exports.getThisWorkRecord = async (user, id) => {
 };
 
 exports.updateWorkRecord= async(id,user,body)=>{
+    if(!user){
+        throw new AppError("Unauthorized", 401)
+    }
     const workRecord = await WorkRecord.findById(id);
     if (!workRecord) {
         throw new AppError("Work record not found", 404);
@@ -134,7 +171,7 @@ exports.updateWorkRecord= async(id,user,body)=>{
         400
     );
     }
-    if (workRecord.worker.toString() !== user._id.toString()) {
+    if (workRecord.worker.toString() !== user.id.toString()) {
     throw new AppError(
         "You are not authorized to delete this work record",
         403
@@ -142,47 +179,49 @@ exports.updateWorkRecord= async(id,user,body)=>{
 }
 
 
-    const updatedWorkrecord = await WorkRecord.findByIdAndUpdate({
-        
+    const updateData = {
         title: body.title,
-
         description: body.description,
-
         category: body.category,
-
         type: body.type,
-
         customer: body.customer,
-
         amount: body.amount,
-
         visibility: body.visibility,
+        customerWhatsappNumber: body.customerWhatsappNumber,
+        engagementType: body.engagementType
+    };
 
-        customerWhatsappNumber:
-            body.customerWhatsappNumber,
+    const updatedWorkRecord = await WorkRecord.findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        {
+            new: true,
+            runValidators: true
+        }
+    );
 
-    })
-    return updatedWorkrecord
-}
+    return updatedWorkRecord;
+};
 
 exports.deleteWorkRecord= async(id,user)=>{
     const workRecord = await WorkRecord.findById(id);
-    if (workRecord.worker.toString() !== user._id.toString()) {
+    if (!workRecord) {
+        throw new AppError("Work record not found", 404);
+    }
+    if (workRecord.worker.toString() !== user.id.toString()) {
     throw new AppError(
         "You are not authorized to delete this work record",
         403
     );
 }
-    if (!workRecord) {
-        throw new AppError("Work record not found", 404);
-    }
-    if(!WorkRecord.worker==="user"){
-        throw new AppError("you are not authorized to delete this ", 404)
-    }
+
     const deleteWorkrecord = await WorkRecord.findByIdAndDelete(id)
+    return deleteWorkrecord
 }
 
-exports.review=async(id,user,body)=>{
+exports.review=async(body,user,id)=>{
+    const workRecord = await WorkRecord.findById(id);
+
     if (!workRecord) {
         throw new AppError("Work record not found", 404);
     }
@@ -195,11 +234,11 @@ exports.review=async(id,user,body)=>{
     return AddReview
 }
 
-exports.updateReview= async(id,user,body)=>{
-    if (!workRecord) {
+exports.updateReview= async(body,user,id)=>{
+    if (!WorkRecord) {
         throw new AppError("Work record not found", 404);
     }
-    if (workRecord.reviewedBy.toString() !== user._id.toString()) {
+    if (WorkRecord.reviewedBy.toString() !== user.id.toString()) {
     throw new AppError(
         "You are not authorized to delete this work record",
         403
@@ -213,13 +252,15 @@ exports.updateReview= async(id,user,body)=>{
 }
 
 exports.AddComment= async(id,user,body)=>{
-    if (!workRecord) {
+    const workRecord = await WorkRecord.findById(id);
+
+    if (!WorkRecord) {
         throw new AppError("Work record not found", 404);
     }
     const comment = await Comment.create({
         workRecord:id,
-        commentedBy:user._id,
-        review:body.review
+        commentedBy:user.id,
+        comment:body.comment
     })
     return comment
 }

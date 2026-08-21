@@ -6,7 +6,7 @@ import { useEffect } from "react";
 function WorkRecords(){
     const navigate = useNavigate()
 
-    const [records,setRecords] = useState([])
+    const [records,setRecords] = useState([])   
     const [loading,setLoding]=useState(true)
     const [error,setError] = useState("")
     const [filters,setFilters] = useState({
@@ -181,7 +181,7 @@ function WorkRecords(){
                                     margin: "10px 0",
                                     cursor: "pointer"
                                 }}
-                            >
+                            > 
 
                                 <h3>
                                     {record.title}
