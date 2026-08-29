@@ -2,6 +2,8 @@ const AppError = require("../../utils/AppError");
 const User = require("../../models/User");
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
+const crypto = require("crypto");
+const { sendMail } = require("../../common/mail/mailer");
 
 
 exports.Signup = async(name,email,password,age,role,mobileNumber)=>{
@@ -71,4 +73,126 @@ exports.Login = async(email,password)=>{
     }
 };
 
+}
+
+exports.forgotPassword = async(email)=>{
+    const user = await User.findOne({email});
+    if(!user){
+        throw new AppError("email not found")}
+     // Generate 6 digit OTP
+    const otp = crypto
+        .randomInt(100000, 1000000)
+        .toString();
+
+    // Hash OTP before storing
+    const otpHash = crypto
+        .createHash("sha256")  // SHA-256 === some long hash or fixed-length hash.
+        .update(otp)   // takes to hashing algorithm
+        .digest("hex"); 
+
+    user.passwordResetOtpHash = otpHash; // store in db
+
+    user.passwordResetOtpExpires =
+        new Date(Date.now() + 5 * 60 * 1000); // 5 is the time for expiration
+
+    user.passwordResetOtpAttempts = 0; 
+
+    user.passwordResetVerifiedUntil = null; //Clear old verification
+
+    await user.save(); 
+    
+    await sendMail({
+        to:email,
+        subject:"Your OTP for forgot password request",
+        text:`your MahaaFix password reset OTP is ${otp}. It is valid for 3 min 
+        if this not requested by you please ignore it. Don't share otp we are not responsible for that !!! `,
+
+        html:`
+            <h2> Mahaafix Password Reset </h2>
+            <p>Your password reset OTP is: <p>
+            <h1>${otp} </h1>
+            <p> This OTP is valid for <Strong> 3 minutes </strong> .</p>
+            <p> If you did not request this, please ignore this email.</p>
+        `
+    })
+
+    // Temporary for development
+    console.log("PASSWORD RESET OTP:", otp);
+
+    return {
+        sent: true
+    };
+}
+
+exports.verifyResetOTP = async(otp,email)=>{
+    if(!otp){
+        throw new AppError("otp not found",400);
+    }
+    if(!email){
+        throw new AppError("email not found",400);
+    }
+    const currentTime = Date.now()
+    const user = await User.findOne({email})
+    if(user.passwordResetOtpAttempts>=5 ){
+        throw new AppError("your otp expired",400)
+    }
+    if(user.passwordResetOtpExpires>currentTime){
+        throw new AppError("your otp expired",400) 
+
+    }
+    const otpHash = crypto
+        .createHash("sha256")
+        .update(otp)
+        .digest("hex");
+
+    const isMatch = otpHash === user.passwordResetOtpHash;
+    if(!isMatch){
+        User.passwordResetOtpAttempts +=1
+        await User.save
+        throw new AppError("Incorrect otp",400)
+    }
+
+    user.passwordResetVerifiedUntil =
+        new Date(Date.now() + 10 * 60 * 1000);
+
+    user.passwordResetOtpHash = null;
+    user.passwordResetOtpExpires = null;
+    user.passwordResetOtpAttempts = 0;
+
+    await user.save();
+
+    return {
+        verified: true
+    };
+}
+
+exports.password = async(password,email)=>{
+    if(!password){
+        throw new AppError("password not found try again",404)
+    }
+    if(!email){
+        throw new AppError("email not found",400);
+    }
+    const checkingExistance = await User.findOne({email
+    })
+    if(!checkingExistance){
+        throw new AppError("",400);
+    }
+    if(!checkingExistance.passwordResetVerifiedUntil||checkingExistance.passwordResetVerifiedUntil.getTime() <= Date.now()){
+        throw new AppError(
+            "OTP verification required or expired",
+            400
+        );
+    }
+    const HashedPassword = await bcrypt.hash(password,10)
+        
+    checkingExistance.password = HashedPassword
+    
+    checkingExistance.passwordResetVerifiedUntil = null
+
+    await checkingExistance.save()
+
+    return {
+        updated:true
+    }
 }

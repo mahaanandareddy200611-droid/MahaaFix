@@ -8,7 +8,7 @@ const Auth = async(req , res, next)=>{
 
         if(!AuthHeader){
             console.log("token does not exist ")
-            throw new AppError("token not found! , please Login",401)
+            throw new AppError("token not found! , please Login again",401)
         }
 
         if(!AuthHeader.startsWith("Bearer ")){
@@ -17,24 +17,15 @@ const Auth = async(req , res, next)=>{
         }
         const token = AuthHeader.split(" ")[1];
         // now we have token lets verify it .
+        try{
         const verfiedToken = jwt.verify(token,process.env.JWT_SECRET);
-        // if(!verfiedToken){
-        //     console.log(" token invalid or wrong token ")
-        //     return res.status(403).json({                   this was not needed because jwt.verify diretly does this job! it checks:
-        //                                                     token authentic?   secret correct?   token expired?  token modified? 
-        //         success : false,
-        //         message:" token was not valid"
-        //     })        }
-
-        
+        //    this was not needed because jwt.verify diretly does this job! it checks:
+        //   token authentic?   secret correct?   token expired?  token modified? 
 
         req.user = verfiedToken;
-        
-        // res.status(200).json({    we should not do this because  after .sent .json it completes, next() wont happens 
-        //     success:true,
-        //     message :" token was fine "
-        // })
-
         next();
+        }catch(error){
+            throw new AppError("Invalid or expired token, please login again",401)
+        }
     }
 module.exports=Auth;

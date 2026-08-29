@@ -48,3 +48,32 @@ exports.Login= asyncHandler(async (req,res)=>{
         
 
 })
+
+
+exports.forgotPassword = asyncHandler(async(req,res)=>{
+    const {email} = req.body
+    const find =await authservice.forgotPassword(email)
+
+    return res.status(200).json({
+        success:true,
+        message:"otp-sent",
+        data:find
+    })
+})
+exports.verifyResetOtp = asyncHandler(async(req,res)=>{
+    const {otp,email} = req.body
+    await authservice.verifyResetOTP(otp,email)
+    return res.status(200).json({
+        success:true,
+        message:"otp veified , successful"
+    })
+})
+
+exports.newPassword = asyncHandler(async(req,res)=>{
+    const {password,email} = req.body
+    await authservice.password(password,email)
+    return res.status(200).json({
+        success:true,
+        message:"password changed"
+    })
+})

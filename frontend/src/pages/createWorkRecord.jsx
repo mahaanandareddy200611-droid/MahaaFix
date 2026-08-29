@@ -4,6 +4,7 @@ import {createWorkRecord as createRecord} from "../services/workrecord.service"
 import { useNavigate } from "react-router-dom";
 
 function CreateWorkRecord(){
+
     const Navigate= useNavigate()
     const [value,setValue]=useState({
         title:"",
@@ -27,19 +28,22 @@ function CreateWorkRecord(){
     }
     const HandleSubmit = async(e)=>{
         e.preventDefault();
-        console.log("sending data", value )
-        console.log("TOKEN:", localStorage.getItem("token"));
 
         try{
-
+            const token = localStorage.getItem("token")
+            if(!token){
+                alert("please login to create wokr record")
+                Navigate("/login")
+                return;
+            }
+            const idempotencyKey = crypto.randomUUID()
+            const response = await createRecord(value,token,idempotencyKey)
+            console.log("backend response:", response);
             setLoading(true);
-            const response = await createRecord(value)
+            
             alert("Work Record Created successfully!")
             Navigate("/dashboard")
         }catch(error){
-            console.log("TOKEN:", localStorage.getItem("token"));
-            console.log("create work reacord error: ",error)
-            console.log("backend responce (create workrecord) ",error.response?.data)
             alert(error.response?.data?.message || "Failed to create work record")
         }
         finally{setLoading(false)}}

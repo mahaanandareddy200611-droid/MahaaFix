@@ -13,6 +13,11 @@ const WorkRecordSchema = new mongoose.Schema({
         
     },
     customerName:{type:String},
+    idempotencyKey:{
+        type:String,
+        required:true,
+        trim:true,
+    },
     // createdBy: {
     //     type: mongoose.Schema.Types.ObjectId,
     //     ref: "User",
@@ -91,6 +96,11 @@ const WorkRecordSchema = new mongoose.Schema({
         default:"draft"
     }
 },{timestamps:true})
+
+WorkRecordSchema.index(
+    {worker:1,index:1},
+    {unique:true}
+)
 
 const WorkRecord = mongoose.model("WorkRecord", WorkRecordSchema);
 

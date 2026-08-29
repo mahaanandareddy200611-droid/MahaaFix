@@ -30,3 +30,17 @@ exports.login = joi.object({
     password: joi.string().min(6).required(),
 
 })
+
+exports.forgotPassword= joi.object({
+    email: joi.string().lowercase().email().trim().required()
+})
+
+exports.newpassword=joi.object({
+    email: joi.string().lowercase().email().trim().required(),
+    password:joi.string().min(6).required()
+})
+
+exports.otp = joi.object({
+    email:joi.string().lowercase().email().trim().required(),
+    otp:joi.string().pattern(/^\d{6}$/).required()
+})

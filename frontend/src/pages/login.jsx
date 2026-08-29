@@ -16,7 +16,9 @@ function Login() {
             [e.target.name]: e.target.value
         });
     };
-
+    const handleForgotPassword = async ()=>{
+        // const 
+    }
     const handleLogin = async () => {
         try {   
             const response = await loginUser(value);
@@ -42,11 +44,13 @@ function Login() {
     };
 
     return (
-        <div>
+        <div className="Login-page">
+        <div className="Login-card">
             <h1>Hey! USER</h1>
 
             <p>Welcome to login page</p>
-
+        <div/>
+        <div className="Login-form">
             <p>Email</p>
 
             <input
@@ -55,7 +59,8 @@ function Login() {
                 value={value.email}
                 onChange={handleChange}
             />
-
+        </div>
+        <div className="Login-form">
             <p>Password</p>
 
             <input
@@ -64,20 +69,27 @@ function Login() {
                 value={value.password}
                 onChange={handleChange}
             />
+        </div>
 
-            <button onClick={handleLogin}>
+            <button
+            className="Login-button" 
+            onClick={handleLogin}>
                 Login
             </button>
 
-            <button>
+            <button className="ForgotPassword-Button"
+            onClick={handleForgotPassword}
+            >
                 Forgot Password
             </button>
-
+            <div className="Signup-navigation">
             <p>Don't have an account?</p>
 
             <button onClick={()=>navigate("/signup")}>
                 Signup
             </button>
+            </div>
+        </div>
         </div>
     );
 }

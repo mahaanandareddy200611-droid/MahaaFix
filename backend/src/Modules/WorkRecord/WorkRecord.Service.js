@@ -4,6 +4,7 @@ const User = require("../../models/User");
 const WorkRecord = require("../../models/WorkRecord");
 const Review = require("../../models/Review");
 const Comment = require("../../models/Comment");
+const OutBoxEvent = require("../../models/OutBox")
 
 const limit = 20; // for page limit 
 exports.allWorkRecords=async(query)=>{
@@ -31,36 +32,80 @@ exports.allWorkRecords=async(query)=>{
         return workRecords
 }
 
-exports.createWorkRecordService = async (body, user) => {
 
-    const record = await WorkRecord.create({
 
-        title: body.title,
+exports.createWorkRecordService = async (body, user,idempotencyKey) => {
+    const session = await mongoose.startSession()
+    try{
+    let createdRecord; // to return easily
 
-        description: body.description,
+    await session.withTransaction(async()=>{    // withTransation promise that create both workrecord and outBox
+        const records = await WorkRecord.create([{
 
-        category: body.category,
+            title: body.title,
 
-        type: body.type,
+            description: body.description,
 
-        city: body.city,
+            category: body.category,
+
+            idempotencyKey:idempotencyKey,
+
+            type: body.type,
+
+            city: body.city,
         
-        worker: user.id,
+            worker: user.id,
 
-        customer: body.customer,
+            customer: body.customer,
 
-        amount: body.amount,
+            amount: body.amount,
 
-        visibility: body.visibility,
+            visibility: body.visibility,
 
-        customerWhatsappNumber:
-            body.customerWhatsappNumber,
+            customerWhatsappNumber:
+                body.customerWhatsappNumber,
 
-        engagementType:
-            body.engagementType
-    });
-    return record;
+            engagementType:
+                body.engagementType,
+        }],
+        {session}
+        );
+        createdRecord = records[0]; // keeping record into createdRecords 
+
+        await OutBoxEvent.create([{  // outbox Event 
+            type:"Job_Recorded",
+            AggregateType:"WorkRecord",
+            AggregateId:createdRecord.id,
+        playload:{jobId:createdRecord.id},
+        status:"PENDING"
+
+    }],
+    {session}
+    )
+    
+    })
+    
+    await User.updateOne(
+        {id:id},
+        {$inc:{WorkRecordsCount:1}},
+        {session}
+    );
+
+    return createdRecord
+
+    }catch(error){
+        if(error.code === 11000){  // for idempotancy mean for duplicates 
+            const existingJob = await WorkRecord.findOne({worker:user.id , idempotencyKey:idempotencyKey})
+            return(existingJob)
+        }
+    throw error;
+        }finally{
+            await session.endSession()  // is session ends then only it will have Workrecord and outbox
+        }
 };
+
+
+
 exports.getWorkRecord = async (user, query) => {
     if (!user) {
         throw new AppError("Unauthorized", 401);
@@ -173,7 +218,7 @@ exports.updateWorkRecord= async(id,user,body)=>{
     }
     if (workRecord.worker.toString() !== user.id.toString()) {
     throw new AppError(
-        "You are not authorized to delete this work record",
+        "You are not authorized to update this work record",
         403
     );
 }

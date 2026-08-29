@@ -1,8 +1,10 @@
 import api from "../api/api";
 
 
-export const createWorkRecord =(data)=>{
-    return api.post("/api/v1/work/WorkRecord",data);
+export const createWorkRecord =(data,idempotencyKey)=>{
+    return api.post("/api/v1/work/WorkRecord",data ,{
+        headers:{"Idempotency-Key":idempotencyKey}
+    });
 };
 export const getAllWorkRecords = (params) => {
     return api.get("/api/v1/work/allWorkRecords", {

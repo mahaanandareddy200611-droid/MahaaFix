@@ -1,5 +1,6 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const WorkRecordService = require("./WorkRecord.Service")
+
 // GET ALL
 exports.allWorkRecords= asyncHandler(async (req,res) => {
     const WorkRecord = await(WorkRecordService.allWorkRecords(req.query)) // query is for filter
@@ -10,11 +11,22 @@ exports.allWorkRecords= asyncHandler(async (req,res) => {
         message:"successfully , workRecords are Available",
     })
 })
+
 // CREATE
 exports.createWorkRecord= asyncHandler(async (req,res) => {
-    const postWorkRecord = await(WorkRecordService.createWorkRecordService(req.body,req.user))
-    console.log("BODY:", body);
-    console.log("AUTH USER:", user);
+    const idempotencyKey = req.header("Idempotency-Key");
+
+    if(!idempotencyKey){
+        return res.status(400).json({
+            success:false,
+            message: " Idempotancy key is required"
+        })
+    }
+
+    const postWorkRecord = await(WorkRecordService.createWorkRecordService(req.body,req.user,idempotencyKey))
+    console.log("BODY:", req.body);
+    console.log("AUTH USER:", req.user);
+    console.log("IDEMPOTENCY KEY:", idempotencyKey);
     return res.status(201).json({
         success:true,
         data:postWorkRecord,
@@ -24,7 +36,6 @@ exports.createWorkRecord= asyncHandler(async (req,res) => {
 
 // exports.getmyWorkRecords= asyncHandler(async (req,res) => {
 //     const getmyWorkRecord = await(WorkRecordService.WorkRecord(req.user,req.query)) 
-
 //     return res.status(200).json({
 //         success:true,
 //         data:getmyWorkRecord,

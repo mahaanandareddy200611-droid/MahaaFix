@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema({
         default:'customer',
         required:true
     },
+    WorkRecordsCount:{
+        type:Number,
+        default:0,
+        min:0,
+    },
 
                      
     savedAddresses:[{
@@ -50,6 +55,25 @@ const userSchema = new mongoose.Schema({
       landMark:String,
       label:String
     }],
+    passwordResetOtpHash: {
+        type: String,
+        default: null
+    },
+
+    passwordResetOtpExpires: {
+        type: Date,
+        default: null
+        },
+
+    passwordResetOtpAttempts: {
+        type: Number,
+        default: 0
+    },
+
+    passwordResetVerifiedUntil: {
+        type: Date,
+        default: null
+    }
     
 }
 )

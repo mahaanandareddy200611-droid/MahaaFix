@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Signup as signupUser } from "../services/auth.service";
 import { useNavigate } from "react-router-dom";
+import "../css/Signup.css";
 
 function Signup() {
+    const navigate = useNavigate();
+
     const [value, setValue] = useState({
         name: "",
         email: "",
@@ -18,79 +21,108 @@ function Signup() {
             [e.target.name]: e.target.value
         });
     };
-    const navigate = useNavigate()
+
     const handleSignup = async () => {
         try {
             const response = await signupUser(value);
 
             console.log("Signup response:", response.data);
 
-            alert("signup successfull")
-            navigate("/login")
-
+            alert("Signup successful");
+            navigate("/login");
 
         } catch (error) {
-            alert(error.response?.data?.message||"Signup failed")
-
             console.log("Signup error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Signup failed"
+            );
         }
     };
 
     return (
-        <div>
-            <h1>Hello New USER</h1>
+        <div className="signup-page">
 
-            <p>Please Signup</p>
+            <div className="signup-card">
 
-            <p>Name</p>
-            <input
-                type="text"
-                name="name"
-                value={value.name}
-                onChange={handleChange}
-            />
+                <div className="signup-header">
+                    <h1>Create your account</h1>
+                    <p>Join MahaaFix and start managing your work records.</p>
+                </div>
 
-            <p>Email</p>
-            <input
-                type="email"
-                name="email"
-                value={value.email}
-                onChange={handleChange}
-            />
+                <div className="form-group">
+                    <label>Name</label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={value.name}
+                        onChange={handleChange}
+                        placeholder="Enter your name"
+                    />
+                </div>
 
-            <p>Password</p>
-            <input
-                type="password"
-                name="password"
-                value={value.password}
-                onChange={handleChange}
-            />
+                <div className="form-group">
+                    <label>Email</label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={value.email}
+                        onChange={handleChange}
+                        placeholder="Enter your email"
+                    />
+                </div>
 
-            <p>Mobile</p>
-            <input
-                type="text"
-                name="mobileNumber"
-                value={value.mobileNumber}
-                onChange={handleChange}
-            />
+                <div className="form-group">
+                    <label>Password</label>
+                    <input
+                        type="password"
+                        name="password"
+                        value={value.password}
+                        onChange={handleChange}
+                        placeholder="Create a password"
+                    />
+                </div>
 
-            <p>Age</p>
-            <input
-                type="number"
-                name="age"
-                value={value.age}
-                onChange={handleChange}
-            />
+                <div className="form-group">
+                    <label>Mobile Number</label>
+                    <input
+                        type="text"
+                        name="mobileNumber"
+                        value={value.mobileNumber}
+                        onChange={handleChange}
+                        placeholder="Enter mobile number"
+                    />
+                </div>
 
-            <button onClick={handleSignup}>
-                Signup
-            </button>
+                <div className="form-group">
+                    <label>Age</label>
+                    <input
+                        type="number"
+                        name="age"
+                        value={value.age}
+                        onChange={handleChange}
+                        placeholder="Enter age"
+                    />
+                </div>
 
-            <p>Already have an account?</p>
+                <button
+                    className="signup-button"
+                    onClick={handleSignup}
+                >
+                    Create Account
+                </button>
 
-            <button onClick={()=>navigate("/login")}>
-                Login
-            </button>
+                <div className="login-link">
+                    <span>Already have an account?</span>
+
+                    <button onClick={() => navigate("/login")}>
+                        Login
+                    </button>
+                </div>
+
+            </div>
+
         </div>
     );
 }
