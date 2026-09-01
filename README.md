@@ -2,19 +2,19 @@
 
 A structured service-management platform for customers and workers
 
-MahaaFix is a full-stack application being built to make service work more structured, trackable, and reliable.
+MahaaFix is a full-stack application being developed to make service work more structured, trackable, and reliable.
 
-Instead of handling a service request only through calls or messages, MahaaFix models the interaction as a structured job lifecycle involving customers, workers, authentication, authorization, job assignment, work progress, work records, reviews, comments, and proof.
+Instead of treating a service request as a simple call or chat, MahaaFix models it as a structured workflow involving authentication, authorization, job assignment, job progress, work records, reviews, and comments.
 
-The project is currently under active development, with the backend serving as the core of the system.
+«Current focus: building the core service workflow from request → authorization → job processing → work record.»
 
 ---
 
-📌 Current Status
+📌 Project Status
 
-Status: Active Development
+Active Development
 
-The current repository contains:
+The repository currently contains:
 
 - Backend API
 - Web frontend
@@ -24,20 +24,20 @@ The current repository contains:
 - Role-based authorization
 - Job management
 - Worker assignment
-- Job lifecycle management
+- Job lifecycle
 - Work records
 - Reviews and comments
 - File-upload infrastructure
 - MongoDB persistence
-- Error handling and validation
+- Validation and centralized error handling
 
-The repository is intentionally evolving feature by feature.
+The system is being developed incrementally, so this README documents the current implementation rather than future features.
 
 ---
 
 🧠 Core Idea
 
-A normal service interaction can look like:
+A typical service interaction can look like:
 
 Customer
    │
@@ -53,109 +53,103 @@ Work
    ▼
 Done
 
-MahaaFix turns that into a structured system:
+MahaaFix structures that process:
 
 Customer
-    │
-    ▼
+   │
+   ▼
 Create Job
-    │
-    ▼
+   │
+   ▼
 Assign Worker
-    │
-    ▼
+   │
+   ▼
 Worker Accepts
-    │
-    ▼
-Job Progress
-    │
-    ▼
-Estimate / Approval
-    │
-    ▼
+   │
+   ▼
+Checking / Job Progress
+   │
+   ▼
+Estimate
+   │
+   ▼
+Customer Approval
+   │
+   ▼
 Work Completed
-    │
-    ▼
+   │
+   ▼
 Verification
-    │
-    ▼
+   │
+   ▼
 Work Record
-    │
-    ▼
+   │
+   ▼
 Review / Comment
-
-This structured workflow is the current foundation of MahaaFix.
 
 ---
 
 🏗️ System Architecture
 
-At a high level, the current system is organized as:
+┌─────────────────────────┐
+│     Web / Mobile App    │
+│   Customer / Worker     │
+└────────────┬────────────┘
+             │
+             │ HTTP Request
+             ▼
+┌─────────────────────────┐
+│      Express App        │
+│        src/app.js       │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│         Router          │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│       Middleware        │
+│                         │
+│ Authentication          │
+│ Authorization           │
+│ Validation              │
+│ Job Access              │
+│ Upload Handling         │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│       Controller        │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│ Service Layer*          │
+│ Business Logic          │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│       Mongoose          │
+│         Models          │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│        MongoDB          │
+└─────────────────────────┘
 
-┌──────────────────────┐
-│       Customer       │
-│       / Worker       │
-└──────────┬───────────┘
-           │
-           │ HTTP Request
-           ▼
-┌──────────────────────┐
-│   Web / Mobile App   │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│    Express Server    │
-│       src/app.js     │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│       Router         │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│      Middleware      │
-│                      │
-│ Authentication       │
-│ Authorization        │
-│ Validation           │
-│ Job Access           │
-│ Upload Handling      │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│      Controller      │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│       Service        │
-│    Business Logic    │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│       Mongoose       │
-│        Models        │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│       MongoDB        │
-└──────────────────────┘
+* Modules that currently have a service layer use it for business logic. Some modules, such as the current WorkRecord module, route through the controller directly.
 
-The backend currently separates modules into Auth, User, Job, and WorkRecord, while common middleware, models, configuration, utilities, and mail functionality live separately under "src".
+The backend is organized into Auth, User, Job, and WorkRecord modules, with middleware, models, configuration, utilities, and common code separated under "src".
 
 ---
 
 🔄 Request / Route Flow
 
-This is one of the most important parts of the current backend.
-
-A request generally moves through:
+A typical protected request moves through:
 
 HTTP Request
      │
@@ -166,53 +160,71 @@ Express Application
 Route
      │
      ▼
-Authentication / Authorization
+Authentication
      │
      ▼
-Validation / Job Loading
+Authorization / Job Access
+     │
+     ▼
+Validation / Request Processing
      │
      ▼
 Controller
      │
      ▼
-Service
+Service (where used)
      │
      ▼
-Model
+Mongoose Model
      │
      ▼
 MongoDB
      │
      ▼
-Controller Response
+Response
      │
      ▼
 Client
 
-The application registers the current route groups in "src/app.js": "/profile", "/api/v1/auth", "/api/v1/jobs", and "/api/v1/work".
+The current Express application mounts these main route groups:
+
+/profile
+/api/v1/auth
+/api/v1/jobs
+/api/v1/work
+
+It also has centralized "notFound" and "errorHandler" middleware at the end of the application pipeline.
 
 ---
 
-🛣️ API Routes
+🛣️ API Overview
 
-Authentication
+Module| Base Route| Purpose
+Authentication| "/api/v1/auth"| Signup, login, password recovery
+User| "/profile"| Authenticated user profile
+Jobs| "/api/v1/jobs"| Job creation and lifecycle
+Work Records| "/api/v1/work"| Work records, reviews, comments
 
-Base route:
+---
+
+🔐 Authentication
+
+Base Route
 
 /api/v1/auth
 
-Current endpoints:
+Endpoints
 
 Method| Endpoint| Purpose
-POST| "/signup"| Create an account
-POST| "/login"| Authenticate a user
-POST| "/forget-password"| Start password recovery
-POST| "/verify-reset-otp"| Verify reset OTP
-POST| "/reset-password"| Reset password
+"POST"| "/signup"| Create a user account
+"POST"| "/login"| Authenticate a user
+"POST"| "/forget-password"| Start password recovery
+"POST"| "/verify-reset-otp"| Verify password-reset OTP
+"POST"| "/reset-password"| Reset password
 
-The authentication router applies request validation before passing requests to the corresponding controller.
+These routes are defined in the current authentication router, with Joi-based validation applied before the controllers.
 
-Authentication flow
+Login Flow
 
 Client
   │
@@ -226,7 +238,7 @@ Auth Router
 Validation
   │
   ▼
-Auth Controller
+Login Controller
   │
   ▼
 Authentication Logic
@@ -238,18 +250,18 @@ Response
 
 👤 User / Profile
 
-Base route:
+Base Route
 
 /profile
 
-Current endpoint:
+Endpoint
 
-Method| Endpoint| Middleware| Purpose
-GET| "/profile"| Auth| Get authenticated user's profile
+Method| Endpoint| Protection| Purpose
+"GET"| "/profile"| Authentication| Get authenticated user's profile
 
 The profile route is protected by the authentication middleware.
 
-Flow:
+Flow
 
 Client
   │
@@ -257,51 +269,48 @@ Client
 GET /profile
   │
   ▼
-Auth Middleware
+Authentication Middleware
   │
   ▼
 User Controller
   │
   ▼
-Profile
-  │
-  ▼
-Response
+Profile Response
 
 ---
 
 🔧 Jobs
 
-Base route:
+Jobs are currently the central workflow of MahaaFix.
+
+Base Route
 
 /api/v1/jobs
 
-Jobs are currently the central workflow of MahaaFix.
+Endpoints
 
-Current endpoints
+Method| Endpoint| Middleware / Protection
+"GET"| "/"| Auth
+"GET"| "/my-jobs"| Auth
+"POST"| "/create"| Auth + Validation
+"GET"| "/:id"| Auth + Load Job
+"POST"| "/:id/assign"| Auth + Load Job + Admin
+"PATCH"| "/:id/accepted"| Auth + Worker + Load Job
+"PATCH"| "/:id/status"| Auth + Load Job + Job Access
+"PATCH"| "/:id/checking"| Auth + Load Job + Job Access
+"PATCH"| "/:id/EstimateSubmitted"| Auth + Load Job + Job Access
+"PATCH"| "/:id/Approval"| Auth + Load Job + Job Access
+"PATCH"| "/:id/WorkCompleted"| Auth + Load Job + Job Access
+"PATCH"| "/:id/verified"| Auth + Load Job + Job Access
+"PATCH"| "/:id/ReworkRequired"| Auth + Load Job + Job Access
 
-Method| Endpoint| Main protection
-GET| "/"| Auth
-GET| "/my-jobs"| Auth
-POST| "/create"| Auth + Validation
-GET| "/:id"| Auth + Job Loading
-POST| "/:id/assign"| Auth + Job Loading + Admin
-PATCH| "/:id/accepted"| Auth + Worker
-PATCH| "/:id/status"| Auth + Job Access
-PATCH| "/:id/checking"| Auth + Job Access
-PATCH| "/:id/EstimateSubmitted"| Auth + Job Access
-PATCH| "/:id/Approval"| Auth + Job Access
-PATCH| "/:id/WorkCompleted"| Auth + Job Access
-PATCH| "/:id/verified"| Auth + Job Access
-PATCH| "/:id/ReworkRequired"| Auth + Job Access
-
-These routes and their middleware chains are defined directly in the current "Job.Router.js".
+These routes and their middleware order are defined directly in the current "Job.Router.js".
 
 ---
 
 🔁 Job Lifecycle
 
-The current job router models a state-driven workflow:
+The current job workflow is state-driven:
 
 Created
    │
@@ -321,9 +330,6 @@ Estimate Submitted
 Approval
    │
    ▼
-Work In Progress
-   │
-   ▼
 Work Completed
    │
    ▼
@@ -333,58 +339,54 @@ Verification
    │
    └──────────────► Rework Required
 
-The corresponding operations are represented by the current job endpoints:
+The corresponding route operations are:
 
-/create
-   ↓
-/:id/assign
-   ↓
-/:id/accepted
-   ↓
-/:id/checking
-   ↓
-/:id/EstimateSubmitted
-   ↓
-/:id/Approval
-   ↓
-/:id/WorkCompleted
-   ↓
-/:id/verified
-       or
-/:id/ReworkRequired
-
-This is one of the main pieces of business logic currently being developed in MahaaFix.
+POST  /create
+        ↓
+POST  /:id/assign
+        ↓
+PATCH /:id/accepted
+        ↓
+PATCH /:id/checking
+        ↓
+PATCH /:id/EstimateSubmitted
+        ↓
+PATCH /:id/Approval
+        ↓
+PATCH /:id/WorkCompleted
+        ↓
+PATCH /:id/verified
+        │
+        └────── or ──────► PATCH /:id/ReworkRequired
 
 ---
 
 🔐 Job Authorization Flow
 
-MahaaFix does not treat every authenticated user as having unlimited access to every job operation.
+Authentication alone is not enough to perform every job operation.
 
-Different routes use different middleware.
-
-For example:
+The current backend checks different conditions depending on the operation:
 
 Request
    │
    ▼
-Auth
+Authentication
    │
    ▼
 Load Job
    │
-   ├── Admin?
+   ▼
+Role / Job Access Check
    │
-   ├── Worker?
-   │
-   ├── Assigned Worker?
-   │
-   └── Member of Job?
+   ├── Admin
+   ├── Worker
+   ├── Assigned Worker
+   └── Job Participant
    │
    ▼
 Controller
 
-The backend currently contains middleware for:
+Current job-related middleware includes:
 
 Auth
 isAdmin
@@ -393,40 +395,36 @@ isAssignedWorker
 inJobWorkers
 loadJob
 
-along with error handling, async handling, upload handling, and not-found handling.
-
 ---
 
 📋 Work Records
 
-Base route:
+Base Route
 
 /api/v1/work
 
-Work records preserve information about completed service work.
+Work records preserve information about service work and provide the basis for reviews and comments.
 
-Current endpoints
+Endpoints
 
 Method| Endpoint| Protection
-GET| "/allWorkRecords"| Public
-POST| "/WorkRecord"| Auth + Worker + Validation
-GET| "/work-records"| Auth
-GET| "/work-records/:id"| Auth
-PATCH| "/work-records/:id"| Auth + Worker
-DELETE| "/work-records/:id"| Auth + Worker
-POST| "/work-records/:id/review"| Auth
-PATCH| "/work-records/:id/review/update"| Auth
-POST| "/work-records/:id/comment"| Auth
+"GET"| "/allWorkRecords"| Public
+"POST"| "/WorkRecord"| Auth + Worker + Validation
+"GET"| "/work-records"| Auth
+"GET"| "/work-records/:id"| Auth
+"PATCH"| "/work-records/:id"| Auth + Worker
+"DELETE"| "/work-records/:id"| Auth + Worker
+"POST"| "/work-records/:id/review"| Auth
+"PATCH"| "/work-records/:id/review/update"| Auth
+"POST"| "/work-records/:id/comment"| Auth
 
-These are the routes currently implemented in "WorkRecord.Router.js".
+These routes are defined in the current "WorkRecord.Router.js".
 
 ---
 
 ⭐ Reviews & Comments
 
-Work records can have user interaction attached to them.
-
-Current operations include:
+Work records support user interaction through reviews and comments.
 
 Work Record
      │
@@ -437,19 +435,9 @@ Work Record
      └── Comment
            └── Add
 
-The repository also contains dedicated MongoDB models for:
-
-Review
-Comment
-WorkRecord
-
-alongside "User", "job", and "OutBox" models.
-
 ---
 
-📦 Backend Architecture
-
-The backend follows a modular organization:
+🧩 Backend Structure
 
 backend/
 └── src/
@@ -484,13 +472,13 @@ backend/
     ├── common/
     └── app.js
 
-The module structure and individual router/controller/service/validator files are present in the current repository.
+The repository follows a modular backend structure separating routes, controllers, services where used, validators, middleware, and models.
 
 ---
 
 🗂️ Data Models
 
-The current backend contains these main models:
+The backend currently contains models for:
 
 User
 Job
@@ -499,19 +487,19 @@ Review
 Comment
 OutBox
 
-These models are currently stored under:
+These models are stored under:
 
 backend/src/models/
 
 ---
 
-🖥️ Frontend
+🖥️ Web Frontend
 
-The web application is located in:
+The web application lives in:
 
 frontend/
 
-The current frontend source is organized into:
+Its source is organized into:
 
 frontend/src/
 ├── api/
@@ -524,17 +512,17 @@ frontend/src/
 ├── index.css
 └── main.jsx
 
-The frontend already has separate API, routing, page, and service areas rather than putting everything into a single component.
+The current web stack is React, Vite, Axios, and React Router.
 
 ---
 
 📱 Mobile Frontend
 
-The repository also contains:
+The mobile application lives in:
 
 mobilefrontend/
 
-This is the mobile application side of MahaaFix and is being developed separately from the web frontend.
+It is built using React Native and Expo, with React Navigation and Axios.
 
 ---
 
@@ -547,7 +535,7 @@ Backend
 - MongoDB
 - Mongoose
 - JWT
-- bcrypt / bcryptjs
+- bcrypt
 - Joi
 - Multer
 - Cloudinary
@@ -556,9 +544,9 @@ Backend
 - CORS
 - dotenv
 
-These dependencies are present in the current backend package configuration.
+These dependencies are present in the current backend project configuration.
 
-Web Frontend
+Web
 
 - React
 - Vite
@@ -569,69 +557,32 @@ Mobile
 
 - React Native
 - Expo
-
----
-
-🧩 Backend Design
-
-The current backend is organized around separation of responsibilities:
-
-Router
-  │
-  ▼
-Middleware
-  │
-  ▼
-Controller
-  │
-  ▼
-Service
-  │
-  ▼
-Model
-  │
-  ▼
-Database
-
-For example:
-
-Job Request
-     │
-     ▼
-Job.Router.js
-     │
-     ▼
-Auth / Role / Job Middleware
-     │
-     ▼
-Job.Controller.js
-     │
-     ▼
-Job.Services.js
-     │
-     ▼
-job.js
-     │
-     ▼
-MongoDB
-
-This structure allows the application to keep routing, authorization, business logic, and persistence separated.
+- React Navigation
+- Axios
+- AsyncStorage
+- Expo Secure Store
 
 ---
 
 🛡️ Error Handling
 
-The backend has centralized middleware for:
+The backend includes centralized handling for missing routes and application errors:
 
-404 / Not Found
-        │
-        ▼
-Error Handler
-        │
-        ▼
+Request
+   │
+   ▼
+Route Not Found
+   │
+   ▼
+notFound Middleware
+   │
+   ▼
+errorHandler
+   │
+   ▼
 HTTP Response
 
-"notFound" and "errorHandler" are registered after the application routes in "app.js", with the error handler intentionally placed at the end of the middleware chain.
+The "notFound" and "errorHandler" middleware are registered after the application routes.
 
 ---
 
@@ -679,21 +630,23 @@ npm install
 
 Create a ".env" file with the required environment variables.
 
-Then start the backend:
+Then start the server:
 
 node server.js
 
-For development:
+For development with Nodemon:
 
 npx nodemon server.js
 
-The backend currently exposes:
+The current backend also exposes:
 
 GET /
 
-which returns:
+which responds with:
 
 MahaaFix Backend Running 🚀
+
+The backend currently does not define an "npm run dev" script in "package.json", so the commands above reflect the repository as it exists today.
 
 ---
 
@@ -711,26 +664,30 @@ cd mobilefrontend
 npm install
 npm start
 
+The web and mobile package files define the corresponding development commands.
+
 ---
 
 🔒 Environment Variables
 
 Do not commit real credentials to GitHub.
 
-The backend uses environment configuration for values such as:
+The backend uses environment variables for configuration such as:
 
 MongoDB connection
 JWT secret
 Frontend origin
 Cloudinary credentials
 
-Keep secrets inside ".env".
+Keep secrets inside:
+
+.env
 
 ---
 
-📍 Current Development Scope
+🎯 Current Development Scope
 
-The current repository is focused on getting the fundamental MahaaFix workflow working end-to-end:
+The current MahaaFix implementation is focused on:
 
 Authentication
       ↓
@@ -746,7 +703,7 @@ Work Records
       ↓
 Reviews / Comments
 
-The project is being developed incrementally, so this README documents the current implementation rather than presenting future ideas as completed features.
+The goal at this stage is to make the existing workflow work correctly and consistently from the client request through backend authorization, business logic, persistence, and response.
 
 ---
 
@@ -754,19 +711,16 @@ The project is being developed incrementally, so this README documents the curre
 
 MahaaFix is an active work in progress.
 
-The architecture and product will continue to evolve as additional functionality is implemented.
+The architecture and application will continue to evolve as new functionality is implemented.
 
-For now, the primary focus is:
-
-«Build the core service workflow correctly from request → authorization → job processing → work record.»
+This README will be updated alongside the codebase so that it reflects the actual state of the project.
 
 ---
 
-👨‍💻 Project
+👨‍💻 MahaaFix
 
 MahaaFix
-
-A full-stack service-management system currently being developed with a backend-first approach.
+A full-stack service-management platform currently being developed with a backend-first approach.
 
 Repository:
 https://github.com/mahaanandareddy200611-droid/MahaaFix
