@@ -11,8 +11,10 @@ const userroutes = require("./Modules/User/User.Router");
 const jobrouter = require("./Modules/Job/Job.Router");
 const authentication = require("./Modules/Auth/Auth.Router");
 const WorkRecords = require("./Modules/WorkRecord/WorkRecord.Router");
+const Media = require("./Modules/media/Media.Router");
 const notFound = require("./middleware/notFound");
-// const Media = require("./src/Modules/Media/Media.Router");
+
+
 app.use(cors({
     origin: process.env.frontend_url
 }));
@@ -23,7 +25,7 @@ app.use("/profile", userroutes);
 app.use("/api/v1/auth", authentication);
 app.use("/api/v1/jobs", jobrouter);
 app.use("/api/v1/work",WorkRecords);
-// app.use("/api/v1/Media", Media);
+app.use("/api/v1/Media", Media);
 
 // get 
 app.get("/login/test",(req,res)=>{

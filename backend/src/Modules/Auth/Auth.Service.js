@@ -136,7 +136,7 @@ exports.verifyResetOTP = async(otp,email)=>{
     if(user.passwordResetOtpAttempts>=5 ){
         throw new AppError("your otp expired",400)
     }
-    if(user.passwordResetOtpExpires>currentTime){
+    if(user.passwordResetOtpExpires<=currentTime){
         throw new AppError("your otp expired",400) 
 
     }

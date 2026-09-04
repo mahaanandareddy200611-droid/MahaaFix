@@ -20,7 +20,7 @@
     "joi": "^18.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.1",
-    "multer": "^2.2.0",
+    "multer": "^2.3.0",
     "nodemailer": "^9.0.6",
     "openai": "^6.48.0"
   },
