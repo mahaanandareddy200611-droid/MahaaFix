@@ -17,7 +17,7 @@ function Login() {
         });
     };
     const handleForgotPassword = async ()=>{
-        // const 
+        navigate("/forgotpasswordotp")
     }
     const handleLogin = async () => {
         try {   

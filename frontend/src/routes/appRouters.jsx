@@ -5,6 +5,7 @@ import Signup from "../pages/Signup";
 import Dashboard from "../pages/Dashboard";
 import CreateWorkRecord from "../pages/createWorkRecord";
 import WorkRecords from "../pages/allWorkRecords";
+import Forgotpassword from "../pages/forgotpasswordotp"
 
 
 function AppRoutes() {
@@ -16,6 +17,7 @@ function AppRoutes() {
                 <Route path= "/dashboard" element = {<Dashboard/>}/>
                 <Route path ="/createWorkRecord" element={<CreateWorkRecord/>}/>
                 <Route path = "/WorkRecords" element={<WorkRecords/>}/>
+                <Route path="/forgotpasswordotp" element={<Forgotpassword/>}/>
             </Routes>
         </BrowserRouter>
     );
