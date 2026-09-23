@@ -6,9 +6,10 @@ const {signup , login,forgotPassword:forgotPass,newpassword:password ,otp} = req
 
 const validate  = require("../../utils/validate");
 
-const {Login ,Signup,forgotPassword,verifyResetOtp,newPassword }= require("./Auth.Contoller")
+const {Login ,Signup,forgotPassword,verifyResetOtp,newPassword }= require("./Auth.Contoller");
+const idempotancyMiddleware = require("../../infrastructure/idempotency/idempotancy.middleware");
 
-authentication.post("/signup",validate(signup),Signup)
+authentication.post("/signup",validate(signup),idempotancyMiddleware,Signup)
 authentication.post("/login",validate(login),Login)
 authentication.post("/forget-password",validate(forgotPass),forgotPassword)
 authentication.post("/verify-reset-otp",validate(otp),verifyResetOtp)

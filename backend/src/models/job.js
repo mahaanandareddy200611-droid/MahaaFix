@@ -168,8 +168,11 @@ visualProofs: {
 
     },
     {timestamps:true})
-    jobSchema.index({
-status:1
+jobSchema.index({
+status:1,
+"customer.userid":1,
+"worker.workerid":1,
+
 });
 
 jobSchema.index({
