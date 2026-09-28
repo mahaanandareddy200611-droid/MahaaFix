@@ -4,7 +4,7 @@ const idempotancySchema = new mongoose.Schema({
     idempotancyKey:{
         type:String,
         trim:true,
-        maxlength:true,
+        maxlength:255,
         required:true,
     },
     userId:{

@@ -7,7 +7,7 @@ const IsWorker = async(req,res,next)=>{
     }
     if((req.user.role)!=="worker" ){
             
-        throw new AppError("you are not authorized to do this");
+        throw new AppError("you are not authorized to do this",403);
             
     }
     

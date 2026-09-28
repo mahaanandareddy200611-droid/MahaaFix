@@ -79,10 +79,8 @@ exports.getThisJob = asyncHandler(async (req,res)=>{
             address: thisJob.address,
             category: thisJob.category,
             subCategory: thisJob.subCategory,
-            beforePhotos:
-                thisJob.visualProofs.beforePhotos,
-            beforeVideos:
-                thisJob.visualProofs.beforeVideos
+            beforeMedia:
+                thisJob.visualProofs.beforeMedia
         }
     });
 
@@ -97,7 +95,7 @@ exports.AssignJob=asyncHandler(async(req,res)=>{
         const job = await jobservice.AssignJob(req.job,req.body.workerid)
 
         return res.status(200).json({
-            message:"This job was assigned to you ",
+            message:`This job was assigned to ${req.body.workerid} `,
             success:true,   
             data:job
         })
@@ -108,24 +106,35 @@ exports.AssignJob=asyncHandler(async(req,res)=>{
 //        ||||||||||||||||||||||---------------------Accepted------------------------------|||||||||||||||||||||||
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
 exports.Accepted = asyncHandler(async(req,res)=>{
 
     const job = await jobservice.Accepted(req.job,req.user)
         
         return res.status(200).json({
             success:true,
-            message:"Successfully Accepted the work "
+            message:"Successfully Accepted the work ",
+            data:job,
         })
         
     } )
 
 
+exports.Rejected = asyncHandler(async (req, res) => {
+    const job = await jobservice.RejectJob(
+        req.job,
+        req.user
+    );
+
+    return res.status(200).json({
+        success: true,
+        message: "Job rejected successfully",
+        data: job
+    });
+});
+
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //        ||||||||||||||||||||||---------------------updateStatus------------------------------|||||||||||||||||||||||
 // --------------------------------------------------------------------------------------------------------------------------------------------
-
 
 
 exports.updateStatus = asyncHandler(async (req, res) => {
@@ -163,25 +172,26 @@ exports.reachedLocation = asyncHandler(async(req,res)=>{
 //                                               EstimateSubmitted
 //                            |--------------------------------------------------------------|
 
-exports.EstimateSubmitted =asyncHandler( async (req,res) =>{
-        
-        const {budget,actualProblem} = req.body
+exports.EstimateSubmitted = asyncHandler(async (req, res) => {
+    const { budget, actualProblem } = req.body;
 
-        const job = await jobservice.EstimateSubmitted(req.job,req.user,budget,actualProblem);
+    const job = await jobservice.EstimateSubmitted(
+        req.job,
+        req.user,
+        budget,
+        actualProblem
+    );
 
-        await jobservice.updateStatus(job,req.user,"WaitingCustomerApproval")
-        
-        
-        return res.status(200).json({
-            success:true,
-            message:"Estimate Submitted",
-            data:job
-        })
-        
-     }
-)
+    return res.status(200).json({
+        success: true,
+        message: "Estimate Submitted",
+        data: job
+    });
+});
 
-
+//                            |--------------------------------------------------------------|
+//                                               customer Approval
+//                            |--------------------------------------------------------------|
 exports.Approval =asyncHandler( async (req,res) =>{
 
         const { decision }= req.body 
@@ -198,48 +208,56 @@ exports.Approval =asyncHandler( async (req,res) =>{
         })
     } )
 
-exports.WorkCompleted= asyncHandler(async(req,res)=>{
+    
+//                            |--------------------------------------------------------------|
+//                                               WorkCompleteted
+//                            |--------------------------------------------------------------|
+exports.WorkCompleted = asyncHandler(async (req, res) => {
+    const { afterMedia } = req.body;
 
-    const {afterPhotos ,afterVideos} = req.body
-
-    const newJob = await jobservice.WorkCompleted(
-        req.job,req.user, afterPhotos ,afterVideos
+    const job = await jobservice.WorkCompleted(
+        req.job,
+        req.user,
+        afterMedia,
     );
 
-    await jobservice.updateStatus(req.job,req.user,"WorkCompleted");
+    return res.status(200).json({
+        success: true,
+        message: "Work completed successfully",
+        data: job
+    });
+});
+
+//                            |--------------------------------------------------------------|
+//                                              ReWork Required
+//                            |--------------------------------------------------------------|
+
+exports.ReworkRequired = asyncHandler(async (req, res) => {
+    const { reworkProof } = req.body;
+
+    const job = await jobservice.ReworkRequired(
+        req.job,
+        req.user,
+        reworkProof
+    );
 
     return res.status(200).json({
-            success:true,
-            message: "Work completed successfully",
-            data:newJob
-        })   
-})
-
-exports.ReworkRequired = asyncHandler(async(req,res)=>{
-    const {reworkProof} = req.body
-
-    if(!reworkProof){
-        throw new AppError(
-            "Rework proof is required",
-            400
-        );
-    }
-
-    const job = await jobservice.ReworkRequired(req.job,req.user,reworkProof)
-
-    await jobservice.updateStatus(req.job,req.user,"ReworkRequired")
-
-    res.status(200).json({
-        seccess:true,
-        message:"Rework submitted",
-        data:job
-    })
+        success: true,
+        message: "Rework submitted",
+        data: job
+    });
+});
 
 
-})
-
+//                            |--------------------------------------------------------------|
+//                                                      verified
+//                            |--------------------------------------------------------------|
 exports.verified = asyncHandler(async(req,res)=>{
-    const job = await jobservice.updateStatus(req.job,req.user,"Verified")
+    const job = await jobservice.updateStatus(
+        req.job,
+        req.user,
+        "Verified"
+    )
 
     res.status(200).json({
         seccess:true,

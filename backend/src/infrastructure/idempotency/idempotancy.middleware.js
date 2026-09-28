@@ -1,3 +1,4 @@
+const AppError = require("../../utils/AppError")
 const idempotancyService = require("./idempotancy.service")
 
 const { validateIdempotancyKey } = require("./idempotancy.validator")
@@ -20,13 +21,18 @@ const idempotancyMiddleware = async (req,res,next)=>{
             message: "Authentication needed for idempotancy",
         })
     }
-    const endpoint =`${req.method}:${req.baseUrl}${req.path}`;
+    const endPoint =`${req.method}:${req.baseUrl}${req.path}`;
 
-    await idempotancyService.checkAndCreate({
-        key: validation.value,
+    const result =await idempotancyService.checkAndCreate({
+        idempotancyKey: validation.value,
         userId:req.user.id,
-        endpoint,
+        endPoint,
     });
+
+    if(result.existing){
+        
+        throw new AppError("duplicate request",409)
+    }
     next();
 }
 

@@ -1,19 +1,18 @@
-const { required } = require("joi")
 const mongoose = require("mongoose")
 const User = require("./User")
 
 const MediaSchema = new mongoose.Schema({
     uploadedBy:{
         type:mongoose.Schema.ObjectId,
-        ref:User,
+        ref:"User",
         required:true
     },
+    
     type:{
         type:String,
-        enum:["text","image","pdf","video","voice"],
         required:true
     },
-    orginalName:{
+    originalName:{
         type:String,  //  photo.jpg  like this.........
         required:true,
         trim:true,
@@ -31,7 +30,7 @@ const MediaSchema = new mongoose.Schema({
         required:true,
     },
     size:{
-        type:Number,  //  mb gb 
+        type:Number,  // bytes
         required:true
     },
     status: {

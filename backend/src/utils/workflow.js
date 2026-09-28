@@ -20,17 +20,17 @@ const workflow ={
     //     actor:["worker"]
     // },
     WaitingCustomerApproval:{
-   next:["TemporaryFixApproved","InProgress","InspectionCompleted"],
+   next:["TemporaryFixApproved","InProgress"], //"InspectionCompleted"
    actor:["customer","admin","operator"]
 },
     TemporaryFixApproved:{
         next:["InProgress"],
         actor:["customer","admin","operator"]
     },
-    InspectionCompleted:{
-    next:[],
-    actor:["customer","admin","operator"]
-},
+//     InspectionCompleted:{
+//     next:[],
+//     actor:["customer","admin","operator"]
+// },
     Reject:{
         next:[],
         actor:["customer","worker","admin","system"]

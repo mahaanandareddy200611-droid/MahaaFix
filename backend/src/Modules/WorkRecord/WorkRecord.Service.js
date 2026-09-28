@@ -5,6 +5,7 @@ const WorkRecord = require("../../models/WorkRecord");
 const Review = require("../../models/Review");
 const Comment = require("../../models/Comment");
 const OutBoxEvent = require("../../models/OutBox")
+const mongoose = require("mongoose");
 
 const limit = 20; // for page limit 
 exports.allWorkRecords=async(query)=>{
@@ -86,7 +87,7 @@ exports.createWorkRecordService = async (body, user,idempotencyKey) => {
     })
     
     await User.updateOne(
-        {id:id},
+        {_id:id},
         {$inc:{WorkRecordsCount:1}},
         {session}
     );

@@ -5,7 +5,7 @@ const isWorker = require("../../middleware/isWorker")
 const isAssignedWorker = require("../../middleware/isAssignedWorker");
 const inJobWorkers = require("../../middleware/inJobWorkers")
 const loadJob = require("../../middleware/loadJob")
-const { createJobs,myJobs ,getJobs,getThisJob,AssignJob,Accepted,updateStatus,
+const { createJobs,myJobs ,getJobs,getThisJob,AssignJob,Accepted,Rejected,updateStatus,
     reachedLocation,EstimateSubmitted,Approval,WorkCompleted,verified,ReworkRequired } = require("./Job.Controller");
 const  validate  = require("../../utils/validate");
 const { createjob } = require("./Job.Validator");
@@ -13,21 +13,25 @@ const idempotancyMiddleware = require("../../infrastructure/idempotency/idempota
 
 const jobrouter = express.Router();
 
-jobrouter.get("/", Auth, getJobs);
+jobrouter.get("/", Auth, getJobs);  // it sends of freshly created :: title category subCategory address.city address.street with a query 
 
-jobrouter.get("/my-jobs", Auth, myJobs);
+jobrouter.get("/my-jobs", Auth, myJobs);  // either created by you or verified by you || job done by you || all for admin
 
-jobrouter.post("/create", Auth,validate(createjob),idempotancyMiddleware,createJobs);
+jobrouter.post("/create", Auth,validate(createjob),idempotancyMiddleware,createJobs);// to create job
 
-jobrouter.get("/:id", Auth,loadJob, getThisJob);
+jobrouter.get("/:id", Auth,loadJob, getThisJob); // to get more details about that respeted job details 
 
-jobrouter.post("/:id/assign",Auth,loadJob,isAdmin,idempotancyMiddleware,AssignJob)
+jobrouter.post("/:id/assign",Auth,loadJob,isAdmin,idempotancyMiddleware,AssignJob) 
+// for Admin to assign jobs by woker userids checks online or not    
 
 jobrouter.patch("/:id/accepted", Auth,isWorker,loadJob,idempotancyMiddleware,Accepted);
+//  
 
-jobrouter.patch("/:id/status", Auth,loadJob,inJobWorkers,idempotancyMiddleware, updateStatus);
+jobrouter.patch("/:id/reject",Auth,isWorker,loadJob,idempotancyMiddleware,Rejected);
 
-jobrouter.patch("/:id/checking",Auth,loadJob,inJobWorkers,reachedLocation)
+jobrouter.patch("/:id/status", Auth,loadJob,isAdmin,idempotancyMiddleware, updateStatus);
+
+jobrouter.patch("/:id/checking",Auth,loadJob,inJobWorkers,idempotancyMiddleware,reachedLocation)
 
 jobrouter.patch("/:id/EstimateSubmitted",Auth,loadJob,inJobWorkers,idempotancyMiddleware,EstimateSubmitted); 
 

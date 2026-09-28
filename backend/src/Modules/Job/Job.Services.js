@@ -3,20 +3,25 @@ const AppError = require("../../utils/AppError");
 const User = require("../../models/User");
 const workflow = require("../../utils/workflow")
 
+
+// ========================================================================================================================================
+//                                                 create jobs
+// =====================================================================================================================================
+
 exports.createJobs=async(data,user)=>{
 
-    const {beforePhotos,beforeVideos,budget,paymentStatus,...jobData} = data; // we are extracted those from data beforePhotos,, videos budget
+    const {beforeMedia,budget,paymentStatus,...jobData} = data; // we are extracted those from data beforePhotos,, videos budget
     const NewJob = await Job.create({
         ...jobData,
-       
+       status:"Created",
         customer:{
             userid:user.id,
             name:user.name,
             mobileNumber:user.mobileNumber
                 },
         visualProofs: {
-            beforePhotos: beforePhotos || [],
-            beforeVideos: beforeVideos || []
+            beforeMedia: beforeMedia || [],
+            // beforeVideos: beforeVideos || []
             },
         payments: {
             budget: budget,
@@ -27,6 +32,10 @@ exports.createJobs=async(data,user)=>{
     return NewJob
 
 }
+
+// ========================================================================================================================================
+//                                                my jobs  self created or done
+// =====================================================================================================================================
 
 exports.myJobs=async(user,query)=>{
     const page = Number(query.page)||0
@@ -59,6 +68,11 @@ exports.myJobs=async(user,query)=>{
     return jobs
 }
 
+
+// ========================================================================================================================================
+//                                                 get Jobs   which are avilable to get done 
+// =====================================================================================================================================
+
 exports.getJobs=async(query)=>{
     const page = Number(query.page)||0
     const filter = {
@@ -79,6 +93,10 @@ exports.getJobs=async(query)=>{
 
 }
 
+// ========================================================================================================================================
+//                                                 get details of a perticular job
+// =====================================================================================================================================
+
 exports.getThisJob = async(id)=>{
 
     const job = await Job.findById(id)
@@ -91,47 +109,142 @@ exports.getThisJob = async(id)=>{
 
     return job
 }
+// ========================================================================================================================================
+//                                                 AssignJob
+// =====================================================================================================================================
 
-exports.AssignJob = async(job,workerid)=>{
+exports.AssignJob = async (job, workerId) => {
+    const worker = await User.findOne({
+        _id: workerId,
+        role: "worker"
+    }).select("_id name mobileNumber isOnline");
+
+    if (!worker) {
+        throw new AppError("Worker not found", 404);
+    }
+
+    if (!worker.isOnline) {
+        throw new AppError("Worker is currently offline", 409);
+    }
+
+    const updatedJob = await Job.findOneAndUpdate(
+        {
+            _id: job.id,
+            status: "Created"
+        },
+        {
+            $set: {
+                worker: {
+                    workerid: worker.id,
+                    name: worker.name,
+                    mobileNumber: worker.mobileNumber
+                },
+                status: "Assigned"
+            }
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    );
+
+    if (!updatedJob) {
+        throw new AppError(
+            "Job is no longer available for assignment",
+            409
+        );
+    }
+
+    return updatedJob;
+};
+
+// =================================================================================================================================
+//                                                      Rejected job
+// =================================================================================================================================
+exports.RejectJob = async(job,user)=>{
     
-    const worker = await User.findById(workerid);
+    const worker = await User.findById(user.id);
     
     if(!worker || worker.role !=="worker"){
-        throw new AppError("worker not found",400);
-            
+        throw new AppError("worker not found",400);    
         }
-    job.worker={  // worker details 
-        workerid:worker._id,
-        name:worker.name,
-        mobileNumber:worker.mobileNumber
-        }
+    if(job.worker?.workerid?.toString()!== user.id.toString()){
+        throw new AppError("This job is not Assigned to you",403)
+    }
 
-    job.status="Assigned"
-    await job.save()
-    return job
+    const updatedJob = await Job.findOneAndUpdate({
+        _id:job.id,
+        status:"Assigned",
+        "worker.workerid":user.id
+    },{
+        $set:{
+            worker:null,
+            status:"Created"
+        }
+    },{
+        new:true,
+        runValidators: true
+    })
+    if(!updatedJob){
+        throw new AppError( "Job is no longer assigned to this worker",409)
+    }
+    // job.worker=null
+    // job.status="Created"
+    // await job.save()
+    return updatedJob
 }
+
+
+// ========================================================================================================================================
+//                                                 Accepted the job
+// =====================================================================================================================================
 
 exports.Accepted = async(job,user)=>{
 
-    if(job.status!== "Assigned"){
-            throw new AppError("this was not assigned ",403)
-            
-    }
-    if(!job.worker?.workerid||job.worker.workerid.toString() !==user.id){  // this search for worker? workerid if found it stops dubilicate accepts
+    
+    if(!job.worker?.workerid||job.worker.workerid.toString() !==user.id){ 
+         // this search for worker? workerid if found it stops dubilicate accepts
             throw new AppError("this was not assigned to you",403)
         }
-        job.worker={
-            workerid:user.id,
-            name:user.name,
-            mobileNumber:user.mobileNumber
+    const updateJob = await Job.findOneAndUpdate(
+        {
+            _id:job.id,
+            status:"Assigned",
+            "worker.workerid": user.id
+        },{
+            $set:{
+                worker:{
+                    workerid:user.id,
+                    name:user.name,
+                    mobileNumber:user.mobileNumber
+                },
+                status:"WorkerAccepted"
+                
+            }
+        },{
+            new: true,
+            runValidators: true
+        }
+    )
+        // job.worker={
+        //     workerid:user.id,
+        //     name:user.name,
+        //     mobileNumber:user.mobileNumber
+        // }
+
+        // job.status = "WorkerAccepted"
+
+        // await job.save()
+        if(!updateJob){
+            throw new AppError("job has alreadyy been assigned ")
         }
 
-        job.status = "WorkerAccepted"
-
-        await job.save()
-
-        return job
+        return updateJob
 }
+
+// ========================================================================================================================================
+//                                                 Update the Job Status
+// =====================================================================================================================================
 
 exports.updateStatus = async(job,user,newStatus)=>{
         
@@ -165,49 +278,149 @@ exports.updateStatus = async(job,user,newStatus)=>{
         );
         }
 
-        job.status = newStatus;
-
-        await job.save();
-        return job;
-}
-
-exports.EstimateSubmitted = async(job,user,budget,actualProblem)=>{
-
-        if(!budget || !actualProblem){
-            throw new AppError("Budget and actual problem are required");
+        const updatedJob = await Job.findOneAndUpdate(
+        {
+        _id: job.id,
+        status: currentStatus
+        },
+        {
+        $set: {
+            status: newStatus
+        }
+        },
+        {
+        new: true,
+        runValidators: true
+        }
+        );
+        if(!updatedJob){
+            throw new AppError ("status of job was not updated, try again ",409)
         }
 
-        job.EstimateSubmitted={
-            budget,actualProblem
-        }
-
-        job.status="WaitingCustomerApproval"
-        await job.save()
-        return job;
+        return updatedJob;
 }
 
-exports.WorkCompleted = async(job,user,afterPhotos,afterVideos)=>{
+// ========================================================================================================================================
+//                                                    Estimate cost of the job
+// =====================================================================================================================================
 
-    if(!afterPhotos?.length && !afterVideos?.length){
-        throw new AppError("At least one photo or video is required",400);
-        
+exports.EstimateSubmitted = async (job, user, budget, actualProblem) => {
+    if (budget === undefined || budget === null || budget <= 0) {
+        throw new AppError("Valid budget is required", 400);
     }
 
-    job.visualProofs.afterPhotos = afterPhotos || []
-    job.visualProofs.afterVideos= afterVideos || []
+    if (!actualProblem || !actualProblem.trim()) {
+        throw new AppError("Actual problem is required", 400);
+    }
 
-    await job.save();
+    const updatedJob = await Job.findOneAndUpdate(
+        {
+            _id: job.id,
+            status: "Checking",
+            "worker.workerid": user.id
+        },
+        {
+            $set: {
+                EstimateSubmitted: {
+                    budget,
+                    actualProblem: actualProblem.trim()
+                },
+                status: "WaitingCustomerApproval"
+            }
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    );
 
-    return job;
+    if (!updatedJob) {
+        throw new AppError(
+            "Estimate cannot be submitted because the job is no longer in Checking status",
+            409
+        );
+    }
 
-}
-exports.ReworkRequired = async(job,user,reworkProof)=>{
+    return updatedJob;
+};
 
-    
+// ========================================================================================================================================
+//                                                 Work completed
+// =====================================================================================================================================
 
-    job.ReworkRequired.proof = reworkProof;
+exports.WorkCompleted = async (job, user, afterMedia) => {
+    if (!Array.isArray(afterMedia) || afterMedia.length === 0) {
+        throw new AppError(
+            "At least one after-work media item is required",
+            400
+        );
+    }
 
-    await job.save();
+    const updatedJob = await Job.findOneAndUpdate(
+        {
+            _id: job.id,
+            status: "InProgress",
+            "worker.workerid": user.id
+        },
+        {
+            $set: {
+                "visualProofs.afterMedia": afterMedia,
+                status: "WorkCompleted"
+            }
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    );
 
-    return job;
-}
+    if (!updatedJob) {
+        throw new AppError(
+            "Job is no longer available for completion",
+            409
+        );
+    }
+
+    return updatedJob;
+};
+
+// ========================================================================================================================================
+//                                                 re work required
+// =====================================================================================================================================
+exports.ReworkRequired = async (job, user, reworkProof) => {
+    if (!reworkProof || !reworkProof.trim()) {
+        throw new AppError(
+            "Rework proof is required",
+            400
+        );
+    }
+
+    const updatedJob = await Job.findOneAndUpdate(
+    {
+        _id: job.id,
+        status: "WorkCompleted",
+        "customer.userid": user.id
+    },
+    {
+        $set: {
+            rework: {
+                proofMedia: reworkProof,
+                requestedBy: user.id,
+                requestedAt: new Date()
+            },
+            status: "ReworkRequired"
+        }
+    },
+    {
+        new: true,
+        runValidators: true
+    }
+);
+    if (!updatedJob) {
+        throw new AppError(
+            "Rework cannot be requested because the job is no longer awaiting verification",
+            409
+        );
+    }
+    return updatedJob;
+};

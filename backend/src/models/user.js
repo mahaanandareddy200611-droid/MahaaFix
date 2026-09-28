@@ -40,13 +40,31 @@ const userSchema = new mongoose.Schema({
         default:'customer',
         required:true
     },
+
+// for getting user is on online or not based in last seen of each lastHeartbeat 
+
+    isOnline: {
+        type: Boolean,
+        default: false
+    },
+
+    lastSeen: {
+        type: Date,
+        default: null
+    },
+
+    lastHeartbeat: {
+        type: Date,
+        default: null
+    },
+
     WorkRecordsCount:{
         type:Number,
         default:0,
         min:0,
     },
 
-                     
+                 
     savedAddresses:[{
       city:String,
       street:String,
@@ -55,6 +73,7 @@ const userSchema = new mongoose.Schema({
       landMark:String,
       label:String
     }],
+
     passwordResetOtpHash: {
         type: String,
         default: null
@@ -75,10 +94,20 @@ const userSchema = new mongoose.Schema({
         default: null
     }
     
-}
+},{timestamps:true}
 )
-
 
 const User = mongoose.model("User",userSchema)
 
 module.exports=User
+
+userSchema.index({
+    isOnline:1,
+    lastHeartbeat:1,
+    role:1,
+    lastSeen:1,
+})
+
+userSchema.index({
+    email:1
+})

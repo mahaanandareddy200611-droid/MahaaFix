@@ -12,12 +12,6 @@ const MediaService = async (file, userId) => {
         throw new AppError("User not authenticated", 401);
     }
 
-    const mediaTypeMap = {
-        image: "image",
-        video: "video",
-        application: "pdf",
-        audio: "voice"
-    };
 
     const type = file.mimetype.startsWith("image/")
         ? "image"
@@ -44,7 +38,7 @@ const MediaService = async (file, userId) => {
 
         type,
 
-        orginalName: file.originalname,
+        originalName: file.originalname,
 
         mimeType: file.mimetype,
 
@@ -59,5 +53,6 @@ const MediaService = async (file, userId) => {
 
     return media;
 };
+
 
 module.exports = MediaService;

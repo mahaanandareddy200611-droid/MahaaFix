@@ -6,10 +6,12 @@ exports.validateIdempotancyKey = (key) => {
     const { error, value } = idempotencyKeySchema.validate(key);
 
     if(error){
+        console.log(error)
         return {
             valid:false,
             value:null,
             message:error.details[0].message,
+            
         }
     }
 

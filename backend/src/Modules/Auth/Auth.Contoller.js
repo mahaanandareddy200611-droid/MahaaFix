@@ -77,3 +77,33 @@ exports.newPassword = asyncHandler(async(req,res)=>{
         message:"password changed"
     })
 })
+
+exports.workerOnline = asyncHandler(async(req,res)=>{
+
+    await authservice.workerOnline(req.user)
+    return res.status(200).json({
+        success:true,
+        isOnline:true,
+        message:"Now, you are online "
+    })
+})
+
+exports.workerHeartbeat = asyncHandler(async(req,res)=>{
+    const worker = await authservice.workerHeartbeat(req.user)
+    return res.status(200).json({
+        success:true,
+        message:"heartbeat recived",
+        data:worker
+    })
+
+})
+
+exports.workerOffline = asyncHandler(async(req,res)=>{
+
+    await authservice.workerOffline(req.user)
+
+    return res.status(200).json({
+        success:true,
+        message:"now you are offline, you never get new jobs in this state"
+    })
+})

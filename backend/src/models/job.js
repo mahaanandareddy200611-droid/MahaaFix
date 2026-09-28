@@ -119,19 +119,15 @@ const jobSchema = new mongoose.Schema({
         }
     },
 visualProofs: {
-    beforeMedia: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Media"
-        }
-    ],
+    beforeMedia: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Media"
+    }],
 
-    afterMedia: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Media"
-        }
-    ]
+    afterMedia: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Media"
+    }]
 },
 
     EstimateSubmitted:{
@@ -143,11 +139,24 @@ visualProofs: {
         },
 
     },
-    ReworkRequired:{
-        profilePicture: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Media"
-}},
+    rework: {
+    proofMedia: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Media"
+    }],
+
+    reason: {
+        type: String,
+        trim: true
+    },
+
+    requestedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    },
+
+    requestedAt: Date
+},
     
     payments:{
         upfront:{

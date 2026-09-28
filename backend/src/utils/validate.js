@@ -2,7 +2,7 @@ const AppError  = require("./AppError")
 
 const validate = (schema)=>{
     return (req,res,next)=>{
-        const{ error} = schema.validate(req.body,{abortEarly :false})
+        const{ error,value} = schema.validate(req.body,{abortEarly :false})
 
         if(error){
             const errors = error.details.map( err=>err.message)
@@ -11,6 +11,9 @@ const validate = (schema)=>{
                 new AppError(errors.join(", "),400)
             );
         }
+
+        req.body = value; // value being written back into req.body.
+        // with is we get can handle clear data to route handler 
         next()
     }
 }

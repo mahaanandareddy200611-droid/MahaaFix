@@ -4,6 +4,8 @@ const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const crypto = require("crypto");
 const { sendMail } = require("../../common/mail/mailer");
+const { worker } = require("cluster");
+const { now } = require("mongoose");
 
 
 exports.Signup = async(name,email,password,age,role,mobileNumber)=>{
@@ -57,7 +59,7 @@ exports.Login = async(email,password)=>{
         
             process.env.JWT_SECRET,
         {
-            expiresIn:"14d"            //14d => 14 days
+            expiresIn:"15m"          // 15m => 15 min  //14d => 14 days
         }
         );
 
@@ -78,7 +80,7 @@ exports.Login = async(email,password)=>{
 exports.forgotPassword = async(email)=>{
     const user = await User.findOne({email});
     if(!user){
-        throw new AppError("email not found")}
+        throw new AppError("If an account exists for this email, a reset OTP has been sent.",200)}
      // Generate 6 digit OTP
     const otp = crypto
         .randomInt(100000, 1000000)
@@ -132,23 +134,31 @@ exports.verifyResetOTP = async(otp,email)=>{
         throw new AppError("email not found",400);
     }
     const currentTime = Date.now()
-    const user = await User.findOne({email})
+
+    const user = await User.findOne({email}) // checking for the user is really exist or not 
+    if (!user) {
+        throw new AppError("Invalid request", 400);
+    }
+
     if(user.passwordResetOtpAttempts>=5 ){
         throw new AppError("your otp expired",400)
     }
+
     if(user.passwordResetOtpExpires<=currentTime){
         throw new AppError("your otp expired",400) 
 
     }
+
     const otpHash = crypto
         .createHash("sha256")
         .update(otp)
         .digest("hex");
 
     const isMatch = otpHash === user.passwordResetOtpHash;
+
     if(!isMatch){
-        User.passwordResetOtpAttempts +=1
-        await User.save
+        user.passwordResetOtpAttempts +=1
+        await user.save()
         throw new AppError("Incorrect otp",400)
     }
 
@@ -194,5 +204,63 @@ exports.password = async(password,email)=>{
 
     return {
         updated:true
+    }
+}
+
+exports.workerOnline = async(user)=>{
+    if(!user.id||user.role!="worker"){
+        throw new AppError("only logged in workers can update their presence",403)
+    }
+    const now = new Date()
+
+    await User.findByIdAndUpdate(user.id,{
+        $set: {
+            isOnline: true,
+            lastSeen:now,
+            lastHeartbeat:now
+        }
+    },{
+            runValidators: true
+        })
+    return{
+        isOnline:true,
+        lastHeartbeat:now
+    }
+
+}
+
+exports.workerHeartbeat = async(user)=>{
+    if(!user.id||user.role!="worker"){
+        throw new AppError("only loggedin users can update the presence ",403)
+    }
+    const now = new Date()
+
+    await User.findByIdAndUpdate(user.id,{
+        $set:{
+            isOnline:true,
+            lastSeen:now,
+            lastHeartbeat:now
+        }
+    },)
+    return {
+        isOnline:true
+    }
+}
+
+exports.workerOffline=async(user)=>{
+    if(!user.id||user.role!="worker"){
+        throw new AppError("only loggedin users can update the presence ",403)
+    }
+    const now = new Date()
+
+    await User.findByIdAndUpdate(user.id,{
+        $set:{
+            isOnline:false,
+            lastSeen:now
+        }
+    })
+
+    return {
+        isOnline:false
     }
 }
