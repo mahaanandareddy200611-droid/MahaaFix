@@ -1,42 +1,112 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
-const idempotancySchema = new mongoose.Schema({
-    idempotancyKey:{
-        type:String,
-        trim:true,
-        maxlength:255,
-        required:true,
+const idempotancySchema = new mongoose.Schema(
+  {
+    idempotancyKey: {
+      type: String,
+      trim: true,
+      maxlength: 255,
+      required: true,
     },
-    userId:{
-        type:mongoose.Schema.ObjectId,
-        ref:"user",
-        required:true,
+
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", 
+      required: true,
     },
-    endPoint:{
-        type:String,
-        required:true,
-        trim:true,
-        maxlength:200,
-    },},
 
-    {timestamps:true,}
+    endPoint: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 200,
+    },
 
-)
+    requestHash: {
+      type: String,
+      required: true,
+    },
 
-idempotancySchema.index({
-    userId:1,
-    endPoint:1,
-    idempotancyKey:1,
-},{
-    unique:true,
-})
-// db deleting after  48 hours automatically from created time
+    status: {
+      type: String,
+      enum: ["IN_PROGRESS", "COMPLETED", "FAILED"],
+      required: true,
+      default: "IN_PROGRESS",
+    },
+
+    responseStatus: {
+      type: Number,
+    },
+
+    responseBody: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
+
+    completedAt: {
+      type: Date,
+    },
+
+    failedAt: {
+      type: Date,
+    },
+
+    processingStartedAt: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
+
+    // Identifies the current execution owner.
+    // Important for stale IN_PROGRESS recovery.
+    executionToken: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+/*
+ * One logical request identity:
+ *
+ * user + endpoint + idempotency key
+ */
 idempotancySchema.index(
-    {
-        createdAt:1,
-    },{
-        expireAfterSeconds:48*60*60,
-    },
-)
+  {
+    userId: 1,
+    endPoint: 1,
+    idempotancyKey: 1,
+  },
+  {
+    unique: true,
+  }
+);
 
-module.exports = mongoose.model("Idempotancy",idempotancySchema)
+/*
+ * Automatically remove records when expiresAt is reached.
+ */
+idempotancySchema.index(
+  {
+    expiresAt: 1,
+  },
+  {
+    expireAfterSeconds: 0,
+  }
+);
+
+module.exports = mongoose.model(
+  "Idempotancy",
+  idempotancySchema
+);

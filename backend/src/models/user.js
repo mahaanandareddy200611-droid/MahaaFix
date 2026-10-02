@@ -107,7 +107,3 @@ userSchema.index({
     role:1,
     lastSeen:1,
 })
-
-userSchema.index({
-    email:1
-})
