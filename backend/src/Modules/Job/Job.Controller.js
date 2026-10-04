@@ -4,26 +4,67 @@ const AppError = require("../../utils/AppError")
 const User = require("../../models/User")
 const Job = require("../../models/job")
 const jobservice = require("./Job.Services")
+const executeIdempotant =  require("../../infrastructure/idempotency/idempotancy.execution.service");
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //        ||||||||||||||||||||||---------------------create jobs------------------------------|||||||||||||||||||||||
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 
-exports.createJobs = asyncHandler(async(req,res)=>{
+exports.createJobs = asyncHandler(
+    async (req, res) => {
 
-    const newJob = await jobservice.createJobs(
-        req.body,
-        req.user
-    );
+        const result = await executeIdempotant({
 
-    return res.status(201).json({
-        success:true,
-        message:"Job created Successfully",
-        data:newJob
-    });
+                idempotancy:
+                    req.idempotancy,
 
-});
+                operation:
+                    async (session) => {
+
+                        const newJob =
+                            await jobservice.createJobs(
+                                req.body,
+                                req.user,
+                                session
+                            );
+
+                        const body = {
+
+                            success: true,
+
+                            message:
+                                "Job created Successfully",
+
+                            data:
+                                newJob
+                        };
+
+                        return {
+
+                            statusCode: 201,
+
+                            body
+                        };
+
+                    }
+            });
+
+        if (result.replayed) {
+
+            res.set(
+                "Idempotency-Replayed",
+                "true"
+            );
+
+        }
+
+        return res
+            .status(result.statusCode)
+            .json(result.body);
+
+    }
+);
 
 
 //---------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,7 +133,7 @@ exports.getThisJob = asyncHandler(async (req,res)=>{
 
 exports.AssignJob=asyncHandler(async(req,res)=>{
 
-        const job = await jobservice.AssignJob(req.job,req.body.workerid)
+        const job = await jobservice.AssignJob(req.job,req.body.workerid,req.user)
 
         return res.status(200).json({
             message:`This job was assigned to ${req.body.workerid} `,
@@ -195,16 +236,17 @@ exports.EstimateSubmitted = asyncHandler(async (req, res) => {
 exports.Approval =asyncHandler( async (req,res) =>{
 
         const { decision }= req.body 
-        const allowed = [  "TemporaryFixApproved","InProgress","InspectionCompleted"]
+        const allowed = [  "TemporaryFixApproved","InProgress",]//"InspectionCompleted"
         if(!allowed.includes(decision)){
             throw new AppError("wrong responce",400);           
         }
 
-        await jobservice.updateStatus(req.job,req.user,decision);
+         const job = await jobservice.updateStatus(req.job,req.user,decision);
 
         return res.status(200).json({
             success:true,
-            message:`Job moved to ${decision} `
+            message:`Job moved to ${decision} `,
+            data:job
         })
     } )
 
@@ -260,7 +302,7 @@ exports.verified = asyncHandler(async(req,res)=>{
     )
 
     res.status(200).json({
-        seccess:true,
+        success:true,
         message:"job success fully completed",
         data:job
     })

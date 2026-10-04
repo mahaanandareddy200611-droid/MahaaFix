@@ -4,7 +4,8 @@ const WorkRecordSchema = new mongoose.Schema({
     worker: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
+        index:true,
     },
 
     customer: {
@@ -12,10 +13,8 @@ const WorkRecordSchema = new mongoose.Schema({
         ref: "User",
         
     },
-    customerName:{type:String},
-    idempotencyKey:{
+    customerName:{
         type:String,
-        required:true,
         trim:true,
     },
     // createdBy: {
@@ -64,12 +63,13 @@ const WorkRecordSchema = new mongoose.Schema({
     },
     category:{
         type:String,
-        required:[true,"category required"]
+        required:[true,"category required"],
+        trim:true
     },
-    // media: [{
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "Media"
-    // }],
+    Media: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Media"
+    }],
     amount:{
         type:Number,
         required:true,
@@ -86,22 +86,45 @@ const WorkRecordSchema = new mongoose.Schema({
     //     ref: "Invoice"
     // },
 
-    status:{
-        type:String,
-        enum:["draft",
-            "processing",
-            "readyForReview",
-            "confirmed",
-            "completed"],
-        default:"draft"
-    }
+    status: {
+            type: String,
+            enum: [
+                "draft",
+                "processing",
+                "readyForReview",
+                "confirmed",
+                "completed",
+                "archived"
+            ],
+            default: "draft"
+        }
 },{timestamps:true})
 
-WorkRecordSchema.index(
-    {worker:1,index:1},
-    {unique:true}
-)
+/*
+ * Worker dashboard:
+ *
+ * worker + newest records
+ */
+WorkRecordSchema.index({
+    worker: 1,
+    createdAt: -1
+});
 
-const WorkRecord = mongoose.model("WorkRecord", WorkRecordSchema);
+
+/*
+ * Public WorkRecord listing:
+ *
+ * visibility + newest records
+ */
+WorkRecordSchema.index({
+    visibility: 1,
+    createdAt: -1
+});
+
+
+const WorkRecord = mongoose.model(
+    "WorkRecord",
+    WorkRecordSchema
+);
 
 module.exports = WorkRecord;

@@ -33,9 +33,28 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+
+/*
+ * One review per user for one WorkRecord.
+ */
 reviewSchema.index(
-  { workRecord: 1, reviewedBy: 1 },
-  { unique: true }
+    {
+        workRecord: 1,
+        reviewedBy: 1
+    },
+    {
+        unique: true
+    }
 );
+
+
+/*
+ * Useful when fetching all reviews made by a user.
+ */
+reviewSchema.index({
+    reviewedBy: 1
+});
+
+
 
 module.exports = mongoose.model("Review", reviewSchema);

@@ -2,16 +2,25 @@ const Job = require("../../models/job");
 const AppError = require("../../utils/AppError");
 const User = require("../../models/User");
 const workflow = require("../../utils/workflow")
-
+const withTransaction = require("../../infrastructure/transactions/transaction")
+const outboxEvent = require("../../infrastructure/outbox/outbox.service");
 
 // ========================================================================================================================================
 //                                                 create jobs
 // =====================================================================================================================================
 
-exports.createJobs=async(data,user)=>{
+exports.createJobs=async(data,user,session
+) => {
 
+    if (!session) {
+        throw new AppError(
+            "Job creation requires an active transaction",
+            500
+        );
+    }
+    
     const {beforeMedia,budget,paymentStatus,...jobData} = data; // we are extracted those from data beforePhotos,, videos budget
-    const NewJob = await Job.create({
+    const [NewJob] = await Job.create([{
         ...jobData,
        status:"Created",
         customer:{
@@ -27,11 +36,30 @@ exports.createJobs=async(data,user)=>{
             budget: budget,
             paymentStatus: paymentStatus || "Pending"
             }
+    }],{
+        session
+    }
+    )
+    await outboxEvent({
+        session,
+        eventType:"JOB_CREATED",
+
+        aggregateType:"Job",
+
+        aggregateId: NewJob._id,
+
+        payload:{
+            jobId: NewJob._id.toString(),
+            customerId: user.id.toString(),
+            category:NewJob.category,
+            city:NewJob.address?.city,
+            address:NewJob.address
+        }
     })
     // await NewJob.save();  no save required because create only saves 
     return NewJob
-
 }
+
 
 // ========================================================================================================================================
 //                                                my jobs  self created or done
@@ -113,7 +141,10 @@ exports.getThisJob = async(id)=>{
 //                                                 AssignJob
 // =====================================================================================================================================
 
-exports.AssignJob = async (job, workerId) => {
+exports.AssignJob = async (job, workerId,user) => {
+
+    return withTransaction(async(session)=>{
+
     const worker = await User.findOne({
         _id: workerId,
         role: "worker"
@@ -144,8 +175,10 @@ exports.AssignJob = async (job, workerId) => {
         },
         {
             new: true,
-            runValidators: true
+            runValidators: true,
+            session
         }
+        
     );
 
     if (!updatedJob) {
@@ -155,7 +188,34 @@ exports.AssignJob = async (job, workerId) => {
         );
     }
 
+    await outboxEvent({
+        session,
+
+        eventType: "JOB_ASSIGNED",
+
+        aggregateType:"Job",
+
+        aggregateId:updatedJob._id,
+
+        payload:{
+            jobId: updatedJob._id.toString(),
+
+            fromStatus: "Created",
+
+            toStatus: "Assigned",
+
+            actorId:user.id.toString(),
+
+            customerId:updatedJob.customer?.userid?.toString(),
+
+            workerId:updatedJob.worker?.workerid?.toString(),
+
+        }
+    })
+
+
     return updatedJob;
+    })
 };
 
 // =================================================================================================================================
@@ -171,6 +231,7 @@ exports.RejectJob = async(job,user)=>{
     if(job.worker?.workerid?.toString()!== user.id.toString()){
         throw new AppError("This job is not Assigned to you",403)
     }
+    return withTransaction(async(session)=>{
 
     const updatedJob = await Job.findOneAndUpdate({
         _id:job.id,
@@ -183,16 +244,48 @@ exports.RejectJob = async(job,user)=>{
         }
     },{
         new:true,
-        runValidators: true
-    })
+        runValidators: true,
+        session
+    }
+        
+    )
     if(!updatedJob){
         throw new AppError( "Job is no longer assigned to this worker",409)
     }
     // job.worker=null
     // job.status="Created"
     // await job.save()
+
+    
+    await outboxEvent({
+        session,
+
+        eventType:"JOB_REJECTED",
+
+        aggregateType:"Job",
+
+        aggregateId:updatedJob._id,
+
+        payload:{
+            jobId: updatedJob._id.toString(),
+
+            fromStatus: "Assigned",
+
+            toStatus: "Created",
+
+            actorId:user.id.toString(),
+
+            customerId:updatedJob.customer?.userid?.toString(),
+
+            workerId:user.id.toString(),
+
+        }
+    })
+
     return updatedJob
+})
 }
+
 
 
 // ========================================================================================================================================
@@ -206,6 +299,8 @@ exports.Accepted = async(job,user)=>{
          // this search for worker? workerid if found it stops dubilicate accepts
             throw new AppError("this was not assigned to you",403)
         }
+
+    return withTransaction(async(session)=>{
     const updateJob = await Job.findOneAndUpdate(
         {
             _id:job.id,
@@ -223,7 +318,9 @@ exports.Accepted = async(job,user)=>{
             }
         },{
             new: true,
-            runValidators: true
+            runValidators: true,
+        
+            session
         }
     )
         // job.worker={
@@ -235,11 +332,39 @@ exports.Accepted = async(job,user)=>{
         // job.status = "WorkerAccepted"
 
         // await job.save()
+
         if(!updateJob){
             throw new AppError("job has alreadyy been assigned ")
         }
 
+
+        await outboxEvent({
+        session,
+
+        eventType:"JOB_ACCEPTED",
+
+        aggregateType:"Job",
+
+        aggregateId:updateJob._id,
+
+        payload:{
+            jobId: updateJob._id.toString(),
+
+            fromStatus:"Assigned",
+
+            toStatus: "WorkAccepted",
+
+            actorId:user.id.toString(),
+
+            customerId:updateJob.customer?.userid?.toString(),
+
+            workerId:updateJob.worker?.workerid?.toString(),
+
+        }
+    })
+
         return updateJob
+        })
 }
 
 // ========================================================================================================================================
@@ -278,6 +403,7 @@ exports.updateStatus = async(job,user,newStatus)=>{
         );
         }
 
+        return withTransaction(async(session)=>{
         const updatedJob = await Job.findOneAndUpdate(
         {
         _id: job.id,
@@ -290,14 +416,41 @@ exports.updateStatus = async(job,user,newStatus)=>{
         },
         {
         new: true,
-        runValidators: true
+        runValidators: true,
+        session
         }
         );
         if(!updatedJob){
             throw new AppError ("status of job was not updated, try again ",409)
         }
 
+        await outboxEvent({
+        session,
+
+        eventType:"JOB_STATUS_UPDATED",
+
+        aggregateType:"Job",
+
+        aggregateId:updatedJob._id,
+
+        payload:{
+            jobId: updatedJob._id.toString(),
+
+            fromStatus:currentStatus,
+
+            toStatus: newStatus,
+
+            actorId:user.id.toString(),
+
+            customerId:updatedJob.customer?.userid?.toString(),
+
+            workerId:updatedJob.worker?.workerid?.toString(),
+
+        }
+    })
+
         return updatedJob;
+    })
 }
 
 // ========================================================================================================================================
@@ -312,7 +465,7 @@ exports.EstimateSubmitted = async (job, user, budget, actualProblem) => {
     if (!actualProblem || !actualProblem.trim()) {
         throw new AppError("Actual problem is required", 400);
     }
-
+    return withTransaction(async(session)=>{
     const updatedJob = await Job.findOneAndUpdate(
         {
             _id: job.id,
@@ -330,7 +483,8 @@ exports.EstimateSubmitted = async (job, user, budget, actualProblem) => {
         },
         {
             new: true,
-            runValidators: true
+            runValidators: true,
+            session
         }
     );
 
@@ -341,7 +495,34 @@ exports.EstimateSubmitted = async (job, user, budget, actualProblem) => {
         );
     }
 
+    await outboxEvent({
+        session,
+
+        eventType:"JOB_ESTIMATE_SUBMITTED",
+
+        aggregateType:"Job",
+
+        aggregateId:updatedJob._id,
+
+        payload:{
+            jobId: updatedJob._id.toString(),
+
+            fromStatus:"Checking",
+
+            toStatus: "WaitingCustomerApproval",
+
+            actorId:user.id.toString(),
+
+            customerId:updatedJob.customer?.userid?.toString(),
+
+            workerId:updatedJob.worker?.workerid?.toString(),
+
+        }
+    })
+
+
     return updatedJob;
+})
 };
 
 // ========================================================================================================================================
@@ -355,7 +536,7 @@ exports.WorkCompleted = async (job, user, afterMedia) => {
             400
         );
     }
-
+    return withTransaction(async(session)=>{
     const updatedJob = await Job.findOneAndUpdate(
         {
             _id: job.id,
@@ -370,7 +551,9 @@ exports.WorkCompleted = async (job, user, afterMedia) => {
         },
         {
             new: true,
-            runValidators: true
+            runValidators: true,
+        
+            session
         }
     );
 
@@ -381,20 +564,46 @@ exports.WorkCompleted = async (job, user, afterMedia) => {
         );
     }
 
+    await outboxEvent({
+        session,
+
+        eventType: "JOB_WORK_COMPLETED",
+
+        aggregateType:"Job",
+
+        aggregateId:updatedJob._id,
+
+        payload:{
+            jobId: updatedJob._id.toString(),
+
+            fromStatus:"InProgress",
+
+            toStatus: "WorkCompleted",
+
+            actorId:user.id.toString(),
+
+            customerId:updatedJob.customer?.userid?.toString(),
+
+            workerId:updatedJob.worker?.workerid?.toString(),
+
+        }
+    })
+
     return updatedJob;
+})
 };
 
 // ========================================================================================================================================
 //                                                 re work required
 // =====================================================================================================================================
 exports.ReworkRequired = async (job, user, reworkProof) => {
-    if (!reworkProof || !reworkProof.trim()) {
+    if (!Array.isArray(reworkProof) || reworkProof.length === 0) {
         throw new AppError(
-            "Rework proof is required",
+            "At least one rework proof media item is required",
             400
         );
     }
-
+    return withTransaction(async(session)=>{
     const updatedJob = await Job.findOneAndUpdate(
     {
         _id: job.id,
@@ -413,7 +622,8 @@ exports.ReworkRequired = async (job, user, reworkProof) => {
     },
     {
         new: true,
-        runValidators: true
+        runValidators: true,
+        session
     }
 );
     if (!updatedJob) {
@@ -422,5 +632,32 @@ exports.ReworkRequired = async (job, user, reworkProof) => {
             409
         );
     }
+
+    await outboxEvent({
+        session,
+
+        eventType: "JOB_REWORK_REQUIRED",
+
+        aggregateType:"Job",
+
+        aggregateId:updatedJob._id,
+
+        payload:{
+            jobId: updatedJob._id.toString(),
+
+            fromStatus:"WorkCompleted",
+
+            toStatus: "ReworkRequired",
+
+            actorId:user.id.toString(),
+
+            customerId:updatedJob.customer?.userid?.toString(),
+
+            workerId:updatedJob.worker?.workerid?.toString(),
+
+        }
+    })
+
     return updatedJob;
+})
 };

@@ -29,7 +29,7 @@ jobrouter.patch("/:id/accepted", Auth,isWorker,loadJob,idempotancyMiddleware,Acc
 
 jobrouter.patch("/:id/reject",Auth,isWorker,loadJob,idempotancyMiddleware,Rejected);
 
-jobrouter.patch("/:id/status", Auth,loadJob,isAdmin,idempotancyMiddleware, updateStatus);
+jobrouter.patch("/:id/status", Auth,loadJob,inJobWorkers,idempotancyMiddleware, updateStatus);
 
 jobrouter.patch("/:id/checking",Auth,loadJob,inJobWorkers,idempotancyMiddleware,reachedLocation)
 

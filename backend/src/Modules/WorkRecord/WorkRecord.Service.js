@@ -1,4 +1,3 @@
-const workRecord = require("../../models/WorkRecord")
 const AppError = require("../../utils/AppError");
 const User = require("../../models/User");
 const WorkRecord = require("../../models/WorkRecord");
@@ -6,6 +5,14 @@ const Review = require("../../models/Review");
 const Comment = require("../../models/Comment");
 const OutBoxEvent = require("../../models/OutBox")
 const mongoose = require("mongoose");
+const withTransaction = require("./../../infrastructure/transactions/transaction")
+const outboxEvent = require("../../infrastructure/outbox/outbox.service")
+
+
+// =============================================================================================================
+//                                          get all workrecords 
+//==============================================================================================================
+
 
 const limit = 20; // for page limit 
 exports.allWorkRecords=async(query)=>{
@@ -33,15 +40,15 @@ exports.allWorkRecords=async(query)=>{
         return workRecords
 }
 
-
+//=====================================================================================================================
+//                                    create work record
+//======================================================================================================================
 
 exports.createWorkRecordService = async (body, user,idempotencyKey) => {
-    const session = await mongoose.startSession()
-    try{
-    let createdRecord; // to return easily
+    
 
-    await session.withTransaction(async()=>{    // withTransation promise that create both workrecord and outBox
-        const records = await WorkRecord.create([{
+    return withTransaction(async(session)=>{    // withTransation promise that create both workrecord and outBox
+        const [records] = await WorkRecord.create([{
 
             title: body.title,
 
@@ -71,43 +78,67 @@ exports.createWorkRecordService = async (body, user,idempotencyKey) => {
         }],
         {session}
         );
-        createdRecord = records[0]; // keeping record into createdRecords 
 
-        await OutBoxEvent.create([{  // outbox Event 
-            type:"Job_Recorded",
-            AggregateType:"WorkRecord",
-            AggregateId:createdRecord.id,
-        playload:{jobId:createdRecord.id},
-        status:"PENDING"
+        const updateUser = await User.updateOne([
+        {_id:user.id},
+        {$inc:{WorkRecordsCount:1}},
+        {
+            session,
+        }
+    ]
+        );
+        if(!updateUser){
+            throw new AppError("Authentication user no longer exists",404)
+        }
+        if (updateUser.matchedCount === 0) {
+    throw new AppError(
+        "Authenticated user no longer exists",
+        404
+    );
+    }
 
-    }],
-    {session}
-    )
+
+         await outboxEvent({
+            session,
+
+            eventType: "WORK_RECORD_CREATED",
+
+            aggregateType: "WorkRecord",
+
+            aggregateId: records._id,
+
+            payload: {
+                workRecordId:
+                    records._id.toString(),
+
+                workerId:
+                    user.id.toString(),
+
+                customerId:
+                    body.customer?body.customer.toString():null
+            }
+        });
+
+    
+    return records
+
+     //}catch(error){
+    //     if(error.code === 11000){  // for idempotancy mean for duplicates 
+    //         const existingJob = await WorkRecord.findOne({worker:user.id , idempotencyKey:idempotencyKey})
+    //         return(existingJob)
+    //     }
+    // throw error;
+    
+    // no needed this because  we are using alredy idempotancy middle ware 
     
     })
-    
-    await User.updateOne(
-        {_id:id},
-        {$inc:{WorkRecordsCount:1}},
-        {session}
-    );
-
-    return createdRecord
-
-    }catch(error){
-        if(error.code === 11000){  // for idempotancy mean for duplicates 
-            const existingJob = await WorkRecord.findOne({worker:user.id , idempotencyKey:idempotencyKey})
-            return(existingJob)
-        }
-    throw error;
-        }finally{
-            await session.endSession()  // is session ends then only it will have Workrecord and outbox
-        }
 };
 
+//===============================================================================================================
+//                                           getting his own workrecords
+//================================================================================================
 
-
-exports.getWorkRecord = async (user, query) => {
+exports.getmyWorkRecord = async (user, query) => {
     if (!user) {
         throw new AppError("Unauthorized", 401);
     }
@@ -129,11 +160,11 @@ exports.getWorkRecord = async (user, query) => {
     }
 
     if (query.title) {
-        filter.title = { $regex: query.title, $options: "i" };
+        filter.title = { $regex: query.title, $options: "i" }; // $regex :used to match string values 
     }
 
     if (query.city) {
-        filter.city = { $regex: query.city, $options: "i" };
+        filter.city = { $regex: query.city, $options: "i" }; // $options search case-insensitive
     }
 
     const workRecords = await WorkRecord.find(filter)
@@ -148,6 +179,9 @@ exports.getWorkRecord = async (user, query) => {
     return workRecords;
 };
 
+//=======================================================================================================================
+//                                         get work record about some perticular  with Auth only
+//=======================================================================================================================
 
 exports.getWorkRecord = async (user, query) => {
     if (!user) {
@@ -188,7 +222,15 @@ exports.getWorkRecord = async (user, query) => {
     return records;
 };
 
+// =======================================================================================================================
+//                                                     get records about a perticular job details
+//========================================================================================================================
+
 exports.getThisWorkRecord = async (user, id) => {
+
+    if(!user){
+        throw new AppError("Unauthorized",401)
+    }
 
     const workRecord = await WorkRecord.findById(id);
 
@@ -197,11 +239,24 @@ exports.getThisWorkRecord = async (user, id) => {
         throw new AppError("Work record not found", 404);
     }
     if(workRecord.visibility==="private"){
+        const isOwner = workRecord.worker && 
+        workRecord.worker.toString() === user.id.toString()
+
+        const isCustomer = workRecord.customer && 
+        workRecord.customer.toString() === user.id.toString()
+
+        const isAdmin = user.role === "admin" || user.role === "operator";
+
+        if(!isOwner&& !isAdmin && !isCustomer){
         throw new AppError("Unauthorized", 403)
-    }
+    }}
 
     return workRecord;
 };
+
+//========================================================================================================================
+//                                   Update the Workrecord 
+//==========================================================================================================================
 
 exports.updateWorkRecord= async(id,user,body)=>{
     if(!user){
@@ -211,102 +266,245 @@ exports.updateWorkRecord= async(id,user,body)=>{
     if (!workRecord) {
         throw new AppError("Work record not found", 404);
     }
+    if (workRecord.worker.toString() !== user.id.toString()) {
+    throw new AppError(
+        "You are not authorized to update this work record",
+        403
+    );
+    }
     if (workRecord.engagementType !== "contract") {
     throw new AppError(
         "You can't edit this work record since it is not a contract",
         400
     );
     }
-    if (workRecord.worker.toString() !== user.id.toString()) {
-    throw new AppError(
-        "You are not authorized to update this work record",
-        403
-    );
-}
+    
 
+ const updateData = {};
 
-    const updateData = {
-        title: body.title,
-        description: body.description,
-        category: body.category,
-        type: body.type,
-        customer: body.customer,
-        amount: body.amount,
-        visibility: body.visibility,
-        customerWhatsappNumber: body.customerWhatsappNumber,
-        engagementType: body.engagementType
-    };
+    if (body.title !== undefined) {
+        updateData.title = body.title;
+    }
 
-    const updatedWorkRecord = await WorkRecord.findByIdAndUpdate(
-        id,
-        { $set: updateData },
-        {
-            new: true,
-            runValidators: true
-        }
-    );
+    if (body.description !== undefined) {
+        updateData.description = body.description;
+    }
+
+    if (body.category !== undefined) {
+        updateData.category = body.category;
+    }
+
+    if (body.type !== undefined) {
+        updateData.type = body.type;
+    }
+
+    if (body.customer !== undefined) {
+        updateData.customer = body.customer;
+    }
+
+    if (body.amount !== undefined) {
+        updateData.amount = body.amount;
+    }
+
+    if (body.visibility !== undefined) {
+        updateData.visibility = body.visibility;
+    }
+
+    if (body.customerWhatsappNumber !== undefined) {
+        updateData.customerWhatsappNumber =
+            body.customerWhatsappNumber;
+    }
+
+    const updatedWorkRecord =
+        await WorkRecord.findOneAndUpdate(
+            {
+                _id: id,
+                worker: user.id,
+                engagementType: "contract"
+            },
+            {
+                $set: updateData
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+    if (!updatedWorkRecord) {
+        throw new AppError(
+            "Work record could not be updated",
+            409
+        );
+    }
 
     return updatedWorkRecord;
 };
 
-exports.deleteWorkRecord= async(id,user)=>{
-    const workRecord = await WorkRecord.findById(id);
-    if (!workRecord) {
-        throw new AppError("Work record not found", 404);
-    }
-    if (workRecord.worker.toString() !== user.id.toString()) {
-    throw new AppError(
-        "You are not authorized to delete this work record",
-        403
-    );
-}
+//==============================================================================================================
+//                      delete WorkRecord
+//===============================================================================================================
 
-    const deleteWorkrecord = await WorkRecord.findByIdAndDelete(id)
-    return deleteWorkrecord
-}
+exports.deleteWorkRecord= async(id,user)=>{
+    if(!user){
+        throw new AppError("Unauthorized ", 401)
+    }
+    const workRecord =
+        await WorkRecord.findOneAndDelete({
+            _id: id,
+            worker: user.id
+        },{$inc:{WorkRecordsCount:-1}});
+
+    if (!workRecord) {
+        throw new AppError(
+            "Work record not found or you are not authorized",
+            404
+        );
+    }
+
+    return workRecord;
+};
+
+//=========================================================================================================================
+//                                   Review 
+//=========================================================================================================================
 
 exports.review=async(body,user,id)=>{
+    if(!user){
+        throw new AppError("Unauthorized",401)
+    }
     const workRecord = await WorkRecord.findById(id);
 
     if (!workRecord) {
         throw new AppError("Work record not found", 404);
     }
-    const AddReview = await Review.create({
-        workRecord:id,
-        reviewedBy:user,
-        rating:body.rating,
-        review:body.review
-    })
-    return AddReview
+    return withTransaction(async (session) => {
+
+    const review =
+        await Review.create(
+            [{
+                workRecord: id,
+                reviewedBy: user.id,
+                rating: body.rating,
+                review: body.review
+            }],
+            { session }
+        );
+
+    await outboxEvent({
+        session,
+        eventType: "REVIEW_CREATED",
+        aggregateType: "Review",
+        aggregateId: review._id,
+        payload: {
+            reviewId: review._id.toString(),
+            workRecordId: id.toString(),
+            reviewedBy: user.id.toString(),
+            rating: body.rating
+        }
+    });
+
+    return review;
+});
 }
+
+//=========================================================================================================================
+//                                   update the review
+//==========================================================================================================================
 
 exports.updateReview= async(body,user,id)=>{
-    if (!WorkRecord) {
+    if(!user){
+        throw new AppError("Unauthorized",401)
+    }
+    const workRecord = await WorkRecord.findById(id)
+    if (!workRecord) {
         throw new AppError("Work record not found", 404);
     }
-    if (WorkRecord.reviewedBy.toString() !== user.id.toString()) {
-    throw new AppError(
-        "You are not authorized to delete this work record",
-        403
-    );
-}
-    const updateReview = await Review.findByIdAndUpdate({
-        rating:body.rating,
-        review:body.review
-    })
-    return updateReview
-}
+
+
+    const existingReview =
+        await Review.findOne({
+            workRecord: id,
+            reviewedBy: user.id
+        });
+
+    if (!existingReview) {
+        throw new AppError(
+            "Review not found",
+            404
+        );
+    }
+
+    const updateData = {};
+
+    if (body.rating !== undefined) {
+        updateData.rating = body.rating;
+    }
+
+    if (body.review !== undefined) {
+        updateData.review = body.review;
+    }
+
+    const updatedReview =
+        await Review.findOneAndUpdate(
+            {
+                _id: existingReview._id,
+                reviewedBy: user.id
+            },
+            {
+                $set: updateData
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+    return updatedReview;
+};
+
+//=========================================================================================================
+//                          Comment
+//==================================================================================================
 
 exports.AddComment= async(id,user,body)=>{
+    if(!user){
+        throw new AppError("Unouthorized ",401)
+    }
     const workRecord = await WorkRecord.findById(id);
 
-    if (!WorkRecord) {
+    if (!workRecord) {
         throw new AppError("Work record not found", 404);
     }
-    const comment = await Comment.create({
-        workRecord:id,
-        commentedBy:user.id,
-        comment:body.comment
-    })
-    return comment
+    return withTransaction(async (session) => {
+
+    const comment =
+        await Comment.create(
+            [{
+                workRecord: id,
+                commentedBy: user.id,
+                comment: body.comment
+            }],
+            { session }
+        );
+
+    await outboxEvent({
+        session,
+        eventType: "COMMENT_CREATED",
+        aggregateType: "Comment",
+        aggregateId: comment._id,
+        payload: {
+            commentId:
+                comment._id.toString(),
+
+            workRecordId:
+                id.toString(),
+
+            commentedBy:
+                user.id.toString()
+        }
+    });
+
+    return comment;
+});
 }
