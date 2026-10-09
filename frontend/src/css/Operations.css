@@ -1,0 +1,384 @@
+
+.operations-page {
+    box-sizing: border-box;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 30px 18px 50px;
+    background: #f5f7fc;
+    color: #17233d;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.operations-page *,
+.operations-page *::before,
+.operations-page *::after {
+    box-sizing: border-box;
+}
+
+.operations-container {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+.operations-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 26px;
+}
+
+.operations-brand {
+    color: #2457d6;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+}
+
+.operations-header h1 {
+    margin: 14px 0 8px;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+}
+
+.operations-header p {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.7;
+}
+
+.operations-role,
+.operations-status {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 6px 10px;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.operations-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.operations-summary > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 18px;
+    border: 1px solid #dbe3ef;
+    border-radius: 13px;
+    background: #ffffff;
+}
+
+.operations-summary span {
+    color: #64748b;
+    font-size: 0.82rem;
+}
+
+.operations-summary strong {
+    font-size: 1.55rem;
+}
+
+.operations-filters {
+    margin-bottom: 22px;
+    padding: 22px;
+    border: 1px solid #dbe3ef;
+    border-radius: 15px;
+    background: #ffffff;
+}
+
+.operations-filters h2,
+.operations-results-heading h2 {
+    margin: 0;
+    font-size: 1.08rem;
+}
+
+.operations-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+    gap: 16px;
+    align-items: end;
+    margin-top: 18px;
+}
+
+.operations-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.operations-field label,
+.operations-assign-form label {
+    font-size: 0.86rem;
+    font-weight: 650;
+}
+
+.operations-field input,
+.operations-field select,
+.operations-assign-form input {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 11px 13px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #17233d;
+    font: inherit;
+    font-size: 0.9rem;
+}
+
+.operations-field input:focus-visible,
+.operations-field select:focus-visible,
+.operations-assign-form input:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 18%);
+    outline-offset: 1px;
+    border-color: #2457d6;
+}
+
+.operations-primary,
+.operations-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 43px;
+    padding: 10px 15px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.operations-primary {
+    background: #2457d6;
+    color: #ffffff;
+}
+
+.operations-primary:hover:not(:disabled) {
+    background: #1945b5;
+}
+
+.operations-secondary {
+    border-color: #dbe3ef;
+    background: #ffffff;
+    color: #17233d;
+}
+
+.operations-secondary:hover:not(:disabled) {
+    background: #f8fafc;
+}
+
+.operations-primary:disabled,
+.operations-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.operations-primary:focus-visible,
+.operations-secondary:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 25%);
+    outline-offset: 3px;
+}
+
+.operations-notice,
+.operations-error {
+    margin-bottom: 18px;
+    padding: 13px 15px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.operations-notice {
+    border-color: #dbeafe;
+    background: #f8faff;
+    color: #475569;
+}
+
+.operations-error {
+    border-color: #fecdca;
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.operations-results {
+    margin-top: 28px;
+}
+
+.operations-results-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.operations-results-heading > span {
+    color: #64748b;
+    font-size: 0.84rem;
+}
+
+.operations-job-list {
+    display: grid;
+    gap: 14px;
+}
+
+.operations-job-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+    gap: 24px;
+    align-items: center;
+    padding: 23px;
+    border: 1px solid #dbe3ef;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.operations-job-info {
+    min-width: 0;
+}
+
+.operations-job-info h3 {
+    margin: 12px 0 7px;
+    font-size: 1.04rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.operations-job-info p {
+    margin: 7px 0;
+    color: #64748b;
+    font-size: 0.87rem;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.operations-job-info small {
+    display: block;
+    margin-top: 10px;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    overflow-wrap: anywhere;
+}
+
+.operations-job-info a {
+    display: inline-block;
+    margin-top: 13px;
+    color: #2457d6;
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.operations-job-info a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.operations-assign-form {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+.operations-empty {
+    padding: 28px 20px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 13px;
+    background: #ffffff;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.7;
+}
+
+.operations-empty h3 {
+    margin: 0;
+    color: #17233d;
+}
+
+.operations-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 24px;
+}
+
+.operations-pagination span {
+    color: #64748b;
+    font-size: 0.88rem;
+}
+
+@media (max-width: 800px) {
+    .operations-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .operations-filter-actions {
+        grid-column: 1 / -1;
+    }
+
+    .operations-job-card {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 540px) {
+    .operations-page {
+        padding: 22px 12px 35px;
+    }
+
+    .operations-header {
+        flex-direction: column;
+    }
+
+    .operations-summary {
+        gap: 10px;
+    }
+
+    .operations-summary > div,
+    .operations-filters {
+        padding: 16px;
+    }
+
+    .operations-filter-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .operations-filter-actions,
+    .operations-filter-actions button {
+        width: 100%;
+    }
+
+    .operations-job-card {
+        padding: 18px 15px;
+    }
+
+    .operations-pagination {
+        gap: 10px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .operations-page * {
+        scroll-behavior: auto;
+        transition: none;
+    }
+}

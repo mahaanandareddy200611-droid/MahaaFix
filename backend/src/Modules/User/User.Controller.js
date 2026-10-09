@@ -6,7 +6,9 @@ const userservice = require("./User.Service")
 exports.profile= async(req,res)=>{
 
         const data = await userservice.profile(req.user)
-        const {name,email,mobileNumber,age,role}= data
+        const {name,email,mobileNumber,age,role,isOnline,
+lastSeen,
+lastHeartbeat,}= data
 
         return res.status(200).json({
             message: "Your profile ", 

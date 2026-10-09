@@ -1,0 +1,277 @@
+
+.worker-presence-page {
+    box-sizing: border-box;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 28px 16px 48px;
+    background: #f5f7fc;
+    color: #17233d;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.worker-presence-page *,
+.worker-presence-page *::before,
+.worker-presence-page *::after {
+    box-sizing: border-box;
+}
+
+.worker-presence-shell {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.worker-presence-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.worker-presence-brand {
+    color: #2457d6;
+    font-size: 0.8rem;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+    text-decoration: none;
+}
+
+.worker-presence-back {
+    color: #64748b;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.worker-presence-back:hover {
+    color: #2457d6;
+}
+
+.worker-presence-card {
+    padding: clamp(24px, 5vw, 42px);
+    border: 1px solid #dbe3ef;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 14px 40px rgb(23 35 61 / 6%);
+}
+
+.worker-presence-eyebrow {
+    margin: 0 0 12px;
+    color: #2457d6;
+    font-size: 0.73rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+}
+
+.worker-presence-card h1 {
+    margin: 0;
+    font-size: clamp(1.9rem, 5vw, 2.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.045em;
+}
+
+.worker-presence-description {
+    margin: 13px 0 26px;
+    color: #64748b;
+    line-height: 1.75;
+}
+
+.presence-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid #dbe3ef;
+    border-radius: 13px;
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+.presence-status-dot {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #94a3b8;
+}
+
+.presence-status--online {
+    border-color: #abefc6;
+    background: #ecfdf3;
+    color: #067647;
+}
+
+.presence-status--online .presence-status-dot {
+    background: #12b76a;
+}
+
+.presence-status--offline {
+    background: #f8fafc;
+    color: #475569;
+}
+
+.presence-status--starting,
+.presence-status--stopping {
+    border-color: #dbeafe;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.presence-status--unknown {
+    border-color: #fedf89;
+    background: #fffaeb;
+    color: #93370d;
+}
+
+.presence-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px;
+    margin-top: 18px;
+}
+
+.presence-info > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+}
+
+.presence-info span {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.presence-info strong {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.presence-message {
+    margin-top: 18px;
+    padding: 13px 15px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.presence-message--error {
+    border-color: #fecdca;
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.presence-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 11px;
+    margin-top: 24px;
+}
+
+.presence-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 45px;
+    padding: 11px 16px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    font: inherit;
+    font-size: 0.87rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.presence-button--online {
+    background: #067647;
+    color: #ffffff;
+}
+
+.presence-button--online:hover:not(:disabled) {
+    background: #05603a;
+}
+
+.presence-button--offline {
+    border-color: #fecdca;
+    background: #ffffff;
+    color: #b42318;
+}
+
+.presence-button--offline:hover:not(:disabled) {
+    background: #fef3f2;
+}
+
+.presence-button--refresh {
+    border-color: #dbe3ef;
+    background: #ffffff;
+    color: #17233d;
+}
+
+.presence-button--refresh:hover:not(:disabled) {
+    background: #f8fafc;
+}
+
+.presence-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.presence-button:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 25%);
+    outline-offset: 3px;
+}
+
+.presence-note {
+    margin-top: 28px;
+    padding: 18px;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    background: #f8faff;
+}
+
+.presence-note strong {
+    font-size: 0.9rem;
+}
+
+.presence-note p {
+    margin: 9px 0 0;
+    color: #475569;
+    font-size: 0.86rem;
+    line-height: 1.75;
+}
+
+@media (max-width: 520px) {
+    .worker-presence-page {
+        padding: 19px 12px 32px;
+    }
+
+    .worker-presence-card {
+        padding: 24px 18px;
+        border-radius: 16px;
+    }
+
+    .presence-info {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .presence-actions {
+        flex-direction: column;
+    }
+
+    .presence-button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .worker-presence-page * {
+        scroll-behavior: auto;
+        transition: none;
+    }
+}

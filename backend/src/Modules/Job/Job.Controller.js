@@ -108,23 +108,38 @@ exports.getJobs=asyncHandler(async (req,res)=>{
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 
-exports.getThisJob = asyncHandler(async (req,res)=>{
 
-    const thisJob =
-        await jobservice.getThisJob(req.params.id);
+exports.getThisJob = asyncHandler(async (req, res) => {
+    const job = await jobservice.getThisJob(req.params.id);
+
+    // Unassigned workers receive a limited preview.
+    if (req.jobPreviewOnly) {
+        return res.status(200).json({
+            success: true,
+            message: "Job preview fetched successfully",
+            data: {
+                _id: job._id,
+                title: job.title,
+                description: job.description,
+                category: job.category,
+                subCategory: job.subCategory,
+                status: job.status,
+                address: {
+                    city: job.address?.city,
+                },
+                payments: {
+                    budget: job.payments?.budget,
+                },
+                previewOnly: true,
+            },
+        });
+    }
 
     return res.status(200).json({
-        success:true,
-        message:"Job fetched successfully",
-        data:{
-            address: thisJob.address,
-            category: thisJob.category,
-            subCategory: thisJob.subCategory,
-            beforeMedia:
-                thisJob.visualProofs.beforeMedia
-        }
+        success: true,
+        message: "Job fetched successfully",
+        data: job,
     });
-
 });
 
 //---------------------------------------------------------------------------------------------------------------------------------------------

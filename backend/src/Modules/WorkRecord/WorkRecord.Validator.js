@@ -48,7 +48,11 @@ const createWorkRecordSchema = Joi.object({
         .default("work"),
 
     customer: Joi.string()
-        .optional()
+        .optional(),
+    Media: Joi.array()
+    .items(Joi.string().hex().length(24))
+    .max(6)
+    .default([]),
 });
 
 

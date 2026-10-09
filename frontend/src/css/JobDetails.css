@@ -1,0 +1,444 @@
+
+.job-detail-page {
+    box-sizing: border-box;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 26px 18px 56px;
+    background: #f5f7fc;
+    color: #17233d;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.job-detail-page *,
+.job-detail-page *::before,
+.job-detail-page *::after {
+    box-sizing: border-box;
+}
+
+.job-detail-shell {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.job-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.job-detail-back,
+.job-detail-refresh {
+    color: #2457d6;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.job-detail-refresh {
+    min-height: 40px;
+    padding: 9px 13px;
+    border: 1px solid #dbe3ef;
+    border-radius: 9px;
+    background: white;
+    cursor: pointer;
+}
+
+.job-detail-refresh:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.job-detail-card {
+    padding: clamp(22px, 4vw, 40px);
+    border: 1px solid #dbe3ef;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 12px 36px rgb(23 35 61 / 5%);
+}
+
+.job-detail-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.job-detail-eyebrow {
+    margin: 0 0 11px;
+    color: #2457d6;
+    font-size: 0.73rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+}
+
+.job-detail-title-row h1 {
+    margin: 0;
+    font-size: clamp(1.7rem, 4vw, 2.45rem);
+    line-height: 1.25;
+    letter-spacing: -0.04em;
+    overflow-wrap: anywhere;
+}
+
+.job-detail-status {
+    display: inline-flex;
+    padding: 7px 11px;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.job-detail-description {
+    margin: 20px 0 24px;
+    color: #475569;
+    font-size: 0.98rem;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.job-detail-notice,
+.job-detail-alert,
+.job-detail-success {
+    margin: 16px 0;
+    padding: 14px 16px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.job-detail-notice {
+    border-color: #dbeafe;
+    background: #f8faff;
+    color: #475569;
+}
+
+.job-detail-alert {
+    border-color: #fecdca;
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.job-detail-success {
+    border-color: #abefc6;
+    background: #ecfdf3;
+    color: #067647;
+}
+
+.job-detail-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px;
+}
+
+.job-detail-facts > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+    background: #ffffff;
+}
+
+.job-detail-facts span {
+    color: #64748b;
+    font-size: 0.82rem;
+}
+
+.job-detail-facts strong {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.job-detail-section {
+    margin-top: 32px;
+    padding-top: 26px;
+    border-top: 1px solid #e8edf5;
+}
+
+.job-detail-section h2 {
+    margin: 0 0 16px;
+    font-size: 1.15rem;
+    line-height: 1.5;
+}
+
+.job-detail-muted {
+    color: #64748b;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.job-detail-location {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+}
+
+.job-detail-location > div {
+    padding: 13px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.job-detail-location dt {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.job-detail-location dd {
+    margin: 7px 0 0;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.job-detail-parties {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+}
+
+.job-detail-parties > div {
+    padding: 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.job-detail-parties h3 {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+}
+
+.job-detail-parties p {
+    margin: 5px 0;
+    color: #64748b;
+    font-size: 0.88rem;
+    overflow-wrap: anywhere;
+}
+
+.job-workflow-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 0;
+    margin: 18px 0 0;
+    list-style: none;
+}
+
+.job-workflow-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    color: #64748b;
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+}
+
+.job-workflow-list li.is-earlier {
+    background: #f8fafc;
+    color: #475569;
+}
+
+.job-workflow-list li.is-current {
+    border-color: #9bb5f5;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 750;
+}
+
+.job-workflow-marker {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+.job-detail-media-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.job-detail-media-grid figure {
+    min-width: 0;
+    margin: 0;
+    padding: 8px;
+    border: 1px solid #dbe3ef;
+    border-radius: 11px;
+}
+
+.job-detail-media-grid img {
+    display: block;
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 7px;
+}
+
+.job-detail-media-grid figcaption {
+    margin-top: 8px;
+    color: #64748b;
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
+}
+
+.job-detail-actions > button,
+.job-action-form button,
+.job-action-buttons button {
+    min-height: 44px;
+    padding: 11px 16px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: #2457d6;
+    color: #ffffff;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.job-detail-actions button:hover:not(:disabled),
+.job-action-form button:hover:not(:disabled),
+.job-action-buttons button:hover:not(:disabled) {
+    background: #1945b5;
+}
+
+.job-detail-actions button:disabled,
+.job-action-form button:disabled,
+.job-action-buttons button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.job-action-form {
+    display: grid;
+    gap: 11px;
+    max-width: 600px;
+    margin-top: 14px;
+}
+
+.job-action-form label {
+    font-size: 0.88rem;
+    font-weight: 650;
+}
+
+.job-action-form input,
+.job-action-form textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #17233d;
+    font: inherit;
+    font-size: 0.9rem;
+}
+
+.job-action-form textarea {
+    resize: vertical;
+}
+
+.job-action-form input:focus-visible,
+.job-action-form textarea:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 18%);
+    outline-offset: 1px;
+    border-color: #2457d6;
+}
+
+.job-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.job-action-buttons .job-action-secondary {
+    border-color: #dbe3ef;
+    background: #ffffff;
+    color: #17233d;
+}
+
+.job-action-buttons .job-action-secondary:hover:not(:disabled) {
+    background: #f8fafc;
+}
+
+.job-detail-state {
+    max-width: 620px;
+    margin: 60px auto;
+    padding: 30px;
+    border: 1px solid #dbe3ef;
+    border-radius: 14px;
+    background: #ffffff;
+    line-height: 1.7;
+    text-align: center;
+}
+
+.job-detail-state button,
+.job-detail-state a {
+    display: inline-block;
+    margin: 8px;
+    padding: 10px 15px;
+}
+
+@media (max-width: 650px) {
+    .job-detail-page {
+        padding: 18px 12px 34px;
+    }
+
+    .job-detail-card {
+        padding: 22px 16px;
+        border-radius: 15px;
+    }
+
+    .job-detail-title-row {
+        flex-direction: column;
+    }
+
+    .job-detail-facts,
+    .job-detail-location,
+    .job-detail-parties,
+    .job-workflow-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .job-detail-media-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .job-detail-media-grid img {
+        height: 120px;
+    }
+
+    .job-action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .job-action-buttons > button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .job-detail-page * {
+        scroll-behavior: auto;
+        transition: none;
+    }
+}

@@ -54,7 +54,10 @@ exports.Login = async(email,password)=>{
             email:checkingExistance.email, // what we want to use after token; we have to menction here those only, we can access from token..
             role: checkingExistance.role,
             name:checkingExistance.name,
-            mobileNumber:checkingExistance.mobileNumber
+            mobileNumber:checkingExistance.mobileNumber,
+            isOnline: checkingExistance.isOnline,
+            lastSeen: checkingExistance.lastSeen,
+            lastHeartbeat: checkingExistance.lastHeartbeat,
         },
         
             process.env.JWT_SECRET,

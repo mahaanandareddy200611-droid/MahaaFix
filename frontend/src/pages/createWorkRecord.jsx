@@ -1,9 +1,12 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
     createWorkRecord,
 } from "../services/workrecord.service";
+
+import { useRef, useState } from "react";
+import { uploadMedia } from "../services/media.service";
+import WorkRecordMediaPicker from "../components/forms/WorkRecordMediaPicker";
 
 import "../css/createWorkRecord.css";
 
@@ -26,6 +29,12 @@ function CreateWorkRecord() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const [mediaFiles, setMediaFiles] = useState([]);
+
+const uploadedMedia = useRef(new WeakMap());
+const uploadKeys = useRef(new WeakMap());
+const uncertainUploads = useRef(new WeakSet());
+const createRequest = useRef(null);
 
     function handleChange(event) {
         const { name, value } = event.target;
@@ -52,6 +61,52 @@ function CreateWorkRecord() {
             navigate("/login");
             return;
         }
+        const mediaIds = [];
+
+for (const file of mediaFiles) {
+    if (uncertainUploads.current.has(file)) {
+        throw new Error(
+            "A previous upload's result is unknown. " +
+            "Remove that file before submitting again."
+        );
+    }
+
+    let mediaId = uploadedMedia.current.get(file);
+
+    if (!mediaId) {
+        let uploadKey = uploadKeys.current.get(file);
+
+        if (!uploadKey) {
+            uploadKey = crypto.randomUUID();
+            uploadKeys.current.set(file, uploadKey);
+        }
+
+        let response;
+
+        try {
+            response = await uploadMedia(file, uploadKey);
+        } catch (error) {
+            if (error.request && !error.response) {
+                uncertainUploads.current.add(file);
+            }
+
+            throw error;
+        }
+
+        const media = response.data?.data;
+
+        if (!media?._id) {
+            throw new Error(
+                "The Media API returned no Media ID."
+            );
+        }
+
+        mediaId = String(media._id);
+        uploadedMedia.current.set(file, mediaId);
+    }
+
+    mediaIds.push(mediaId);
+}
 
         const payload = {
             ...formData,
@@ -62,6 +117,7 @@ function CreateWorkRecord() {
             amount: Number(formData.amount),
             customerWhatsappNumber:
                 formData.customerWhatsappNumber.trim(),
+            Media: mediaIds,
         };
 
         if (
@@ -86,14 +142,25 @@ function CreateWorkRecord() {
         setIsSubmitting(true);
         setErrorMessage("");
         setSuccessMessage("");
+        
 
         try {
-            const idempotencyKey = crypto.randomUUID();
+            const payloadSignature = JSON.stringify(payload);
 
-            const response = await createWorkRecord(
-                payload,
-                idempotencyKey
-            );
+            if (
+                !createRequest.current ||
+                    createRequest.current.signature !== payloadSignature
+            ) {
+                createRequest.current = {
+                signature: payloadSignature,
+                key: crypto.randomUUID(),
+            };
+        }
+
+        const response = await createWorkRecord(
+            payload,
+            createRequest.current.key
+        );
 
             setSuccessMessage(
                 response.data?.message ||
@@ -101,6 +168,8 @@ function CreateWorkRecord() {
             );
 
             setFormData({ ...initialFormData });
+            createRequest.current = null;
+            setMediaFiles([]);
         } catch (error) {
             if (error.response) {
                 setErrorMessage(
@@ -365,6 +434,13 @@ function CreateWorkRecord() {
                             {" "}characters · Minimum 25
                         </small>
                     </div>
+                    <div className="form-field form-field--full">
+    <WorkRecordMediaPicker
+        files={mediaFiles}
+        onChange={setMediaFiles}
+        disabled={isSubmitting}
+    />
+</div>
 
                     <div className="form-actions">
                         <button

@@ -80,7 +80,19 @@ function Login() {
                 return;
             }
 
-            navigate("/dashboard", { replace: true });
+                        
+            try {
+                establishSession({ token, user });
+
+                navigate("/dashboard", { replace: true });
+            } catch (sessionError) {
+                    setErrorMessage(
+                        sessionError instanceof Error
+                            ? sessionError.message
+                            : "Unable to establish your session."
+                    );
+                return;
+            }
         } catch (error) {
             if (error.response) {
                 const status = error.response.status;

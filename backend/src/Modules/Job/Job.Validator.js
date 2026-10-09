@@ -31,6 +31,10 @@ exports.createjob = Joi.object({
         "any.required":"Budget is required"
     }),
     
-    beforeMedia:Joi.array().items(Joi.string().uri()).required(),
+    beforeMedia: Joi.array()
+    .items(
+        Joi.string().pattern(/^[a-fA-F0-9]{24}$/)
+    )
+    .required(),
 
 })

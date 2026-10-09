@@ -4,6 +4,7 @@ const User = require("../../models/User");
 const workflow = require("../../utils/workflow")
 const {withTransaction }= require("../../infrastructure/transactions/transaction");
 const outboxEvent = require("../../infrastructure/outbox/outbox.service");
+const Media = require("../../models/Media");
 
 // ========================================================================================================================================
 //                                                 create jobs
@@ -20,6 +21,44 @@ exports.createJobs=async(data,user,session
     }
     
     const {beforeMedia,budget,paymentStatus,...jobData} = data; // we are extracted those from data beforePhotos,, videos budget
+    
+
+if (user.role !== "customer") {
+    throw new AppError(
+        "Only customers can create jobs",
+        403
+    );
+}
+
+if (!Array.isArray(beforeMedia)) {
+    throw new AppError(
+        "Before-media must be an array",
+        400
+    );
+}
+
+const normalizedBeforeMedia = [
+    ...new Set(beforeMedia.map(String)),
+];
+
+if (normalizedBeforeMedia.length > 0) {
+    const uploadedMedia = await Media.find({
+        _id: { $in: normalizedBeforeMedia },
+        uploadedBy: user.id,
+        type: "image",
+        status: "completed",
+    })
+        .select("_id")
+        .session(session);
+
+    if (uploadedMedia.length !== normalizedBeforeMedia.length) {
+        throw new AppError(
+            "Every attached photo must be a completed image uploaded by you",
+            400
+        );
+    }
+}
+
     const [NewJob] = await Job.create([{
         ...jobData,
        status:"Created",
@@ -29,7 +68,7 @@ exports.createJobs=async(data,user,session
             mobileNumber:user.mobileNumber
                 },
         visualProofs: {
-            beforeMedia: beforeMedia || [],
+            beforeMedia: normalizedBeforeMedia,
             // beforeVideos: beforeVideos || []
             },
         payments: {
@@ -125,18 +164,28 @@ exports.getJobs=async(query)=>{
 //                                                 get details of a perticular job
 // =====================================================================================================================================
 
-exports.getThisJob = async(id)=>{
 
+exports.getThisJob = async (id) => {
     const job = await Job.findById(id)
-
-    if(!job){throw new AppError(
-            "Job not found",404
+        .populate(
+            "visualProofs.beforeMedia",
+            "url originalName mimeType size status"
+        )
+        .populate(
+            "visualProofs.afterMedia",
+            "url originalName mimeType size status"
+        )
+        .populate(
+            "rework.proofMedia",
+            "url originalName mimeType size status"
         );
 
-}
+    if (!job) {
+        throw new AppError("Job not found", 404);
+    }
 
-    return job
-}
+    return job;
+};
 // ========================================================================================================================================
 //                                                 AssignJob
 // =====================================================================================================================================

@@ -4,6 +4,8 @@ const executeIdempotant = require(
     "../../infrastructure/idempotency/idempotancy.execution.service"
 );
 
+
+
 // GET ALL
 exports.allWorkRecords= asyncHandler(async (req,res) => {
     const WorkRecord = await(WorkRecordService.allWorkRecords(req.query)) // query is for filter
@@ -16,14 +18,12 @@ exports.allWorkRecords= asyncHandler(async (req,res) => {
 })
 
 // CREATE
+
 exports.createWorkRecord = asyncHandler(async (req, res) => {
-
-    const result = await executeIdempotant({
-
-        idempotancy: req.idempotancy.idempotancyKey,
+    const result = await executeIdempotent({
+        idempotancy: req.idempotancy,
 
         operation: async (session) => {
-
             const record =
                 await WorkRecordService.createWorkRecordService(
                     req.body,
@@ -33,26 +33,20 @@ exports.createWorkRecord = asyncHandler(async (req, res) => {
 
             return {
                 statusCode: 201,
-
                 body: {
                     success: true,
-
                     data: record,
-
-                    message: "WorkRecord created successfully"
-                }
+                    message: "Work record created successfully",
+                },
             };
-        }
+        },
     });
 
     if (result.replayed) {
         res.set("Idempotency-Replayed", "true");
     }
 
-    return res
-        .status(result.statusCode)
-        .json(result.body);
-
+    return res.status(result.statusCode).json(result.body);
 });
 
 exports.getmyWorkRecords= asyncHandler(async (req,res) => {

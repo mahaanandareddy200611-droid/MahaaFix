@@ -7,6 +7,7 @@ const OutBoxEvent = require("../../models/OutBox")
 const mongoose = require("mongoose");
 const {withTransaction} = require("../../infrastructure/transactions/transaction");
 const outboxEvent = require("../../infrastructure/outbox/outbox.service")
+const MediaModel = require("../../models/Media");
 
 
 // =============================================================================================================
@@ -52,6 +53,27 @@ exports.createWorkRecordService = async (body, user, session) => {
             500
         );
     }
+    const mediaIds = [...new Set(
+    (body.Media || []).map(String)
+)];
+
+if (mediaIds.length > 0) {
+    const verifiedMedia = await MediaModel.find({
+        _id: { $in: mediaIds },
+        uploadedBy: user.id,
+        type: { $in: ["image", "video", "voice", "pdf"] },
+        status: "completed",
+    })
+        .select("_id")
+        .session(session);
+
+    if (verifiedMedia.length !== mediaIds.length) {
+        throw new AppError(
+            "Every attachment must be a completed file uploaded by you",
+            400
+        );
+    }
+}
 
     // 1. Create the WorkRecord using the executor's session.
     const [record] = await WorkRecord.create(
@@ -78,7 +100,9 @@ exports.createWorkRecordService = async (body, user, session) => {
                 customerWhatsappNumber:
                     body.customerWhatsappNumber,
 
-                engagementType: body.engagementType
+                engagementType: body.engagementType,
+
+                Media: mediaIds,
             }
         ],
         {
@@ -225,32 +249,79 @@ exports.getWorkRecord = async (user, query) => {
 //                                                     get records about a perticular job details
 //========================================================================================================================
 
-exports.getThisWorkRecord = async (user, id) => {
 
-    if(!user){
-        throw new AppError("Unauthorized",401)
+exports.getThisWorkRecord = async (user, id) => {
+    if (!user) {
+        throw new AppError("Unauthorized", 401);
     }
 
-    const workRecord = await WorkRecord.findById(id);
+    if (!mongoose.isValidObjectId(id)) {
+        throw new AppError("Invalid WorkRecord ID", 400);
+    }
 
+    const workRecord = await WorkRecord.findById(id)
+        .populate("worker", "name")
+        .populate("customer", "name")
+        .populate(
+            "Media",
+            "url originalName mimeType size"
+        );
 
     if (!workRecord) {
-        throw new AppError("Work record not found", 404);
+        throw new AppError("WorkRecord not found", 404);
     }
-    if(workRecord.visibility==="private"){
-        const isOwner = workRecord.worker && 
-        workRecord.worker.toString() === user.id.toString()
 
-        const isCustomer = workRecord.customer && 
-        workRecord.customer.toString() === user.id.toString()
+    const currentUserId = String(user.id || user._id || "");
+    const workerId = String(
+        workRecord.worker?._id || workRecord.worker || ""
+    );
+    const customerId = String(
+        workRecord.customer?._id || workRecord.customer || ""
+    );
 
-        const isAdmin = user.role === "admin" || user.role === "operator";
+    const isOwner = workerId === currentUserId;
+    const isCustomer = customerId === currentUserId;
+    const isAdmin = ["admin", "operator"].includes(
+        String(user.role || "").toLowerCase()
+    );
 
-        if(!isOwner&& !isAdmin && !isCustomer){
-        throw new AppError("Unauthorized", 403)
-    }}
+    if (
+        workRecord.visibility === "private" &&
+        !isOwner &&
+        !isCustomer &&
+        !isAdmin
+    ) {
+        throw new AppError(
+            "You are not authorized to view this WorkRecord",
+            403
+        );
+    }
 
-    return workRecord;
+    const [reviews, comments] = await Promise.all([
+        Review.find({ workRecord: id })
+            .populate("reviewedBy", "name")
+            .sort({ createdAt: -1 })
+            .lean(),
+
+        Comment.find({ workRecord: id })
+            .populate("commentedBy", "name")
+            .sort({ createdAt: -1 })
+            .lean(),
+    ]);
+
+    const record = workRecord.toObject();
+
+    // Public detail must not expose private customer contact data.
+    if (!isOwner && !isCustomer && !isAdmin) {
+        delete record.customer;
+        delete record.customerWhatsappNumber;
+    }
+
+    return {
+        ...record,
+        reviews,
+        comments,
+    };
 };
 
 //========================================================================================================================
@@ -377,6 +448,15 @@ exports.review=async(body,user,id)=>{
     if (!workRecord) {
         throw new AppError("Work record not found", 404);
     }
+    if (
+    String(workRecord.customer || "") !==
+    String(user.id || user._id || "")
+) {
+    throw new AppError(
+        "Only the associated customer can review this WorkRecord",
+        403
+    );
+}
     return withTransaction(async (session) => {
 
     const [review] =
@@ -475,6 +555,27 @@ exports.AddComment= async(id,user,body)=>{
     if (!workRecord) {
         throw new AppError("Work record not found", 404);
     }
+    if (workRecord.visibility === "private") {
+    const currentUserId = String(user.id || user._id || "");
+
+    const workerId = String(workRecord.worker || "");
+    const customerId = String(workRecord.customer || "");
+
+    const isAdmin = ["admin", "operator"].includes(
+        String(user.role || "").toLowerCase()
+    );
+
+    if (
+        currentUserId !== workerId &&
+        currentUserId !== customerId &&
+        !isAdmin
+    ) {
+        throw new AppError(
+            "You are not authorized to comment on this private WorkRecord",
+            403
+        );
+    }
+}
     return withTransaction(async (session) => {
 
     const [comment] =

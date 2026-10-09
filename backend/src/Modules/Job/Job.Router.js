@@ -11,6 +11,8 @@ const  validate  = require("../../utils/validate");
 const { createjob } = require("./Job.Validator");
 const idempotancyMiddleware = require("../../infrastructure/idempotency/idempotancy.middleware");
 
+const canViewJob = require("../../middleware/canViewJob");
+
 const jobrouter = express.Router();
 
 jobrouter.get("/", Auth, getJobs);  // it sends of freshly created :: title category subCategory address.city address.street with a query 
@@ -19,7 +21,7 @@ jobrouter.get("/my-jobs", Auth, myJobs);  // either created by you or verified b
 
 jobrouter.post("/create", Auth,validate(createjob),idempotancyMiddleware,createJobs);// to create job
 
-jobrouter.get("/:id", Auth,loadJob, getThisJob); // to get more details about that respeted job details 
+jobrouter.get("/:id", Auth,loadJob,canViewJob, getThisJob); // to get more details about that respeted job details 
 
 jobrouter.post("/:id/assign",Auth,loadJob,isAdmin,idempotancyMiddleware,AssignJob) 
 // for Admin to assign jobs by woker userids checks online or not    

@@ -1,64 +1,87 @@
+
 import api from "../api/api";
 
 const WORK_RECORDS_URL = "/api/v1/work";
 
-// Create a WorkRecord.
-//
-// The caller provides the payload and an idempotency key.
-// The backend remains responsible for correctness.
-export const createWorkRecord = (data, idempotencyKey) => {
+function mutationConfig(idempotencyKey) {
     if (
         typeof idempotencyKey !== "string" ||
-        idempotencyKey.trim() === ""
+        !idempotencyKey.trim()
     ) {
-        throw new Error(
-            "Creating a WorkRecord requires an idempotency key."
-        );
+        throw new Error("A valid idempotency key is required.");
     }
 
-    return api.post(
+    return {
+        headers: {
+            "Idempotency-Key": idempotencyKey,
+        },
+    };
+}
+
+export const createWorkRecord = (data, idempotencyKey) =>
+    api.post(
         `${WORK_RECORDS_URL}/WorkRecord`,
         data,
-        {
-            headers: {
-                "Idempotency-Key": idempotencyKey,
-            },
-        }
+        mutationConfig(idempotencyKey)
     );
-};
 
-// Public WorkRecord listing with backend-supported filters.
-export const getAllWorkRecords = (params = {}) => {
-    return api.get(`${WORK_RECORDS_URL}/allWorkRecords`, {
-        params,
-    });
-};
+export const getAllWorkRecords = (params = {}, config = {}) =>
+    api.get(
+        `${WORK_RECORDS_URL}/allWorkRecords`,
+        { ...config, params }
+    );
 
-// Fetch one WorkRecord by its ID.
-export const getWorkRecordById = (id) => {
-    return api.get(`${WORK_RECORDS_URL}/work-records/${id}`);
-};
+export const getWorkRecordById = (id, config = {}) =>
+    api.get(
+        `${WORK_RECORDS_URL}/work-records/${id}`,
+        config
+    );
 
-// Create a review.
-export const addReview = (id, data) => {
-    return api.post(
+export const getMyWorkRecords = (params = {}, config = {}) =>
+    api.get(
+        `${WORK_RECORDS_URL}/work-records/my`,
+        { ...config, params }
+    );
+
+export const getWorkRecordsCreatedByMe = (
+    params = {},
+    config = {}
+) =>
+    api.get(
+        `${WORK_RECORDS_URL}/work-records`,
+        { ...config, params }
+    );
+
+export const updateWorkRecord = (id, data, key) =>
+    api.patch(
+        `${WORK_RECORDS_URL}/work-records/${id}`,
+        data,
+        mutationConfig(key)
+    );
+
+export const deleteWorkRecord = (id, key) =>
+    api.delete(
+        `${WORK_RECORDS_URL}/work-records/${id}`,
+        mutationConfig(key)
+    );
+
+export const addReview = (id, data, key) =>
+    api.post(
         `${WORK_RECORDS_URL}/work-records/${id}/review`,
-        data
+        data,
+        mutationConfig(key)
     );
-};
 
-// Update an existing review.
-export const updateReview = (id, data) => {
-    return api.patch(
+export const updateReview = (id, data, key) =>
+    api.patch(
         `${WORK_RECORDS_URL}/work-records/${id}/review/update`,
-        data
+        data,
+        mutationConfig(key)
     );
-};
 
-// Add a comment to a WorkRecord.
-export const addComment = (id, data) => {
-    return api.post(
+export const addComment = (id, data, key) =>
+    api.post(
         `${WORK_RECORDS_URL}/work-records/${id}/comment`,
-        data
+        data,
+        mutationConfig(key)
     );
-};
