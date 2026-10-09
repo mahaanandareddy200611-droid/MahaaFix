@@ -1,0 +1,354 @@
+
+/* =========================================
+   MahaaFix — Create WorkRecord
+   ========================================= */
+
+.work-record-page {
+    --color-primary: #2457d6;
+    --color-primary-hover: #1945b5;
+    --color-text: #17233d;
+    --color-muted: #64748b;
+    --color-border: #dbe3ef;
+    --color-surface: #ffffff;
+    --color-background: #f4f7fc;
+    --color-error: #b42318;
+    --color-error-bg: #fef3f2;
+    --color-success: #067647;
+    --color-success-bg: #ecfdf3;
+
+    box-sizing: border-box;
+    min-height: 100vh;
+    padding: clamp(24px, 5vw, 64px) 16px;
+
+    background: var(--color-background);
+    color: var(--color-text);
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+.work-record-page *,
+.work-record-page *::before,
+.work-record-page *::after {
+    box-sizing: border-box;
+}
+
+/* Main card */
+
+.work-record-card {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: clamp(24px, 4vw, 44px);
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+
+    box-shadow: 0 12px 36px rgb(23 35 61 / 6%);
+}
+
+/* Page heading */
+
+.work-record-header {
+    margin-bottom: 32px;
+}
+
+.work-record-eyebrow {
+    margin: 0 0 12px;
+
+    color: var(--color-primary);
+    font-size: 0.75rem;
+    font-weight: 750;
+    letter-spacing: 0.12em;
+}
+
+.work-record-header h1 {
+    margin: 0;
+
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.04em;
+}
+
+.work-record-header > p:last-child {
+    max-width: 600px;
+    margin: 14px 0 0;
+
+    color: var(--color-muted);
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+/* Form layout */
+
+.work-record-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+
+    border: 0;
+}
+
+.form-field--full,
+.form-actions {
+    grid-column: 1 / -1;
+}
+
+.form-field > label,
+.form-field > legend {
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 650;
+}
+
+.form-field > legend {
+    margin-bottom: 10px;
+    padding: 0;
+}
+
+/* Inputs, selects, and textareas */
+
+.form-field input:not([type="radio"]),
+.form-field select,
+.form-field textarea {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    padding: 12px 14px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: var(--color-text);
+
+    font: inherit;
+    font-size: 0.95rem;
+
+    transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease;
+}
+
+.form-field textarea {
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+    color: #94a3b8;
+}
+
+.form-field input:hover,
+.form-field select:hover,
+.form-field textarea:hover {
+    border-color: #94a3b8;
+}
+
+.form-field input:focus-visible,
+.form-field select:focus-visible,
+.form-field textarea:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 18%);
+    outline-offset: 1px;
+    border-color: var(--color-primary);
+}
+
+.form-field > small {
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+/* Engagement radio options */
+
+.radio-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    padding: 14px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+
+    background: #ffffff;
+    cursor: pointer;
+
+    transition:
+        border-color 150ms ease,
+        background-color 150ms ease;
+}
+
+.radio-option:hover {
+    border-color: #9bb5f5;
+    background: #f8faff;
+}
+
+.radio-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    flex-shrink: 0;
+
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.radio-option input[type="radio"]:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 22%);
+    outline-offset: 3px;
+}
+
+.radio-option span {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    line-height: 1.4;
+}
+
+.radio-option strong {
+    font-size: 0.9rem;
+}
+
+.radio-option small {
+    color: var(--color-muted);
+    font-size: 0.8rem;
+}
+
+/* Submit button */
+
+.form-actions {
+    display: flex;
+    justify-content: flex-start;
+    padding-top: 4px;
+}
+
+.form-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 48px;
+    padding: 13px 22px;
+
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    background: var(--color-primary);
+    color: #ffffff;
+
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        background-color 150ms ease,
+        transform 150ms ease;
+}
+
+.form-actions button:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+}
+
+.form-actions button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.form-actions button:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 30%);
+    outline-offset: 3px;
+}
+
+.form-actions button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* API error and success feedback */
+
+.form-message {
+    margin: 0 0 24px;
+    padding: 14px 16px;
+
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    font-size: 0.9rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.form-message--error {
+    border-color: #fecdca;
+    background: var(--color-error-bg);
+    color: var(--color-error);
+}
+
+.form-message--success {
+    border-color: #abefc6;
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+/* Tablet and mobile */
+
+@media (max-width: 640px) {
+    .work-record-page {
+        padding: 20px 12px;
+    }
+
+    .work-record-card {
+        padding: 22px 18px;
+        border-radius: 15px;
+    }
+
+    .work-record-header {
+        margin-bottom: 26px;
+    }
+
+    .work-record-form {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+    }
+
+    .form-field--full,
+    .form-actions {
+        grid-column: auto;
+    }
+
+    .form-actions button {
+        width: 100%;
+        min-height: 50px;
+    }
+}
+
+/* Respect the user's motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+    .work-record-page *,
+    .work-record-page *::before,
+    .work-record-page *::after {
+        scroll-behavior: auto;
+        transition-duration: 0.01ms;
+    }
+}

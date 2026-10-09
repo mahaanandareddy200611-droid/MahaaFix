@@ -5,7 +5,7 @@ const Review = require("../../models/Review");
 const Comment = require("../../models/Comment");
 const OutBoxEvent = require("../../models/OutBox")
 const mongoose = require("mongoose");
-const withTransaction = require("./../../infrastructure/transactions/transaction")
+const {withTransaction} = require("../../infrastructure/transactions/transaction");
 const outboxEvent = require("../../infrastructure/outbox/outbox.service")
 
 
@@ -44,94 +44,93 @@ exports.allWorkRecords=async(query)=>{
 //                                    create work record
 //======================================================================================================================
 
-exports.createWorkRecordService = async (body, user,idempotencyKey) => {
-    
+exports.createWorkRecordService = async (body, user, session) => {
 
-    return withTransaction(async(session)=>{    // withTransation promise that create both workrecord and outBox
-        const [records] = await WorkRecord.create([{
-
-            title: body.title,
-
-            description: body.description,
-
-            category: body.category,
-
-            idempotencyKey:idempotencyKey,
-
-            type: body.type,
-
-            city: body.city,
-        
-            worker: user.id,
-
-            customer: body.customer,
-
-            amount: body.amount,
-
-            visibility: body.visibility,
-
-            customerWhatsappNumber:
-                body.customerWhatsappNumber,
-
-            engagementType:
-                body.engagementType,
-        }],
-        {session}
+    if (!session) {
+        throw new AppError(
+            "WorkRecord creation requires an active transaction",
+            500
         );
-
-        const updateUser = await User.updateOne([
-        {_id:user.id},
-        {$inc:{WorkRecordsCount:1}},
-        {
-            session,
-        }
-    ]
-        );
-        if(!updateUser){
-            throw new AppError("Authentication user no longer exists",404)
-        }
-        if (updateUser.matchedCount === 0) {
-    throw new AppError(
-        "Authenticated user no longer exists",
-        404
-    );
     }
 
+    // 1. Create the WorkRecord using the executor's session.
+    const [record] = await WorkRecord.create(
+        [
+            {
+                title: body.title,
 
-         await outboxEvent({
-            session,
+                description: body.description,
 
-            eventType: "WORK_RECORD_CREATED",
+                category: body.category,
 
-            aggregateType: "WorkRecord",
+                type: body.type,
 
-            aggregateId: records._id,
+                city: body.city,
 
-            payload: {
-                workRecordId:
-                    records._id.toString(),
+                worker: user.id,
 
-                workerId:
-                    user.id.toString(),
+                customer: body.customer,
 
-                customerId:
-                    body.customer?body.customer.toString():null
+                amount: body.amount,
+
+                visibility: body.visibility,
+
+                customerWhatsappNumber:
+                    body.customerWhatsappNumber,
+
+                engagementType: body.engagementType
             }
-        });
+        ],
+        {
+            session
+        }
+    );
 
-    
-    return records
+    // 2. Increment the worker's counter in the same transaction.
+    const updateUser = await User.updateOne(
+        {
+            _id: user.id
+        },
+        {
+            $inc: {
+                WorkRecordsCount: 1
+            }
+        },
+        {
+            session
+        }
+    );
 
-     //}catch(error){
-    //     if(error.code === 11000){  // for idempotancy mean for duplicates 
-    //         const existingJob = await WorkRecord.findOne({worker:user.id , idempotencyKey:idempotencyKey})
-    //         return(existingJob)
-    //     }
-    // throw error;
-    
-    // no needed this because  we are using alredy idempotancy middle ware 
-    
-    })
+    if (updateUser.matchedCount === 0) {
+        throw new AppError(
+            "Authenticated user no longer exists",
+            404
+        );
+    }
+
+    // 3. Create the Outbox event in the same transaction.
+    await outboxEvent({
+        session,
+
+        eventType: "WORK_RECORD_CREATED",
+
+        aggregateType: "WorkRecord",
+
+        aggregateId: record._id,
+
+        payload: {
+            workRecordId: record._id.toString(),
+
+            workerId: user.id.toString(),
+
+            customerId: body.customer
+                ? body.customer.toString()
+                : null
+        }
+    });
+
+    // 4. Return the record to the controller.
+    return record;
 };
 
 //===============================================================================================================
@@ -380,7 +379,7 @@ exports.review=async(body,user,id)=>{
     }
     return withTransaction(async (session) => {
 
-    const review =
+    const [review] =
         await Review.create(
             [{
                 workRecord: id,
@@ -478,7 +477,7 @@ exports.AddComment= async(id,user,body)=>{
     }
     return withTransaction(async (session) => {
 
-    const comment =
+    const [comment] =
         await Comment.create(
             [{
                 workRecord: id,

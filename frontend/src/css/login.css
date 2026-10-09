@@ -1,0 +1,286 @@
+
+/* =========================================
+   MahaaFix — Login page
+   ========================================= */
+
+.Login-page {
+    --login-primary: #2457d6;
+    --login-primary-hover: #1945b5;
+    --login-text: #17233d;
+    --login-muted: #64748b;
+    --login-border: #dbe3ef;
+    --login-error: #b42318;
+    --login-error-bg: #fef3f2;
+
+    box-sizing: border-box;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 32px 16px;
+
+    display: grid;
+    place-items: center;
+
+    background:
+        radial-gradient(
+            ellipse at top left,
+            #e4edff 0%,
+            transparent 45%
+        ),
+        #f5f7fc;
+
+    color: var(--login-text);
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+.Login-page *,
+.Login-page *::before,
+.Login-page *::after {
+    box-sizing: border-box;
+}
+
+/* Login card */
+
+.Login-card {
+    width: 100%;
+    max-width: 440px;
+    padding: clamp(24px, 5vw, 40px);
+
+    background: #ffffff;
+    border: 1px solid var(--login-border);
+    border-radius: 20px;
+
+    box-shadow: 0 18px 55px rgb(23 35 61 / 8%);
+}
+
+/* Heading */
+
+.Login-header {
+    margin-bottom: 30px;
+}
+
+.Login-eyebrow {
+    margin: 0 0 14px;
+
+    color: var(--login-primary);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+}
+
+.Login-header h1 {
+    margin: 0;
+
+    font-size: clamp(1.8rem, 5vw, 2.35rem);
+    line-height: 1.2;
+    letter-spacing: -0.045em;
+}
+
+.Login-header > p:last-child {
+    margin: 12px 0 0;
+
+    color: var(--login-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Form layout */
+
+.Login-form-container {
+    display: grid;
+    gap: 22px;
+}
+
+.Login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+}
+
+.Login-form > label {
+    font-size: 0.9rem;
+    font-weight: 650;
+}
+
+.Login-form > input {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px 14px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: var(--login-text);
+
+    font: inherit;
+    font-size: 0.95rem;
+
+    transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease;
+}
+
+.Login-form > input::placeholder {
+    color: #94a3b8;
+}
+
+.Login-form > input:hover:not(:disabled) {
+    border-color: #94a3b8;
+}
+
+.Login-form > input:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 18%);
+    outline-offset: 1px;
+    border-color: var(--login-primary);
+}
+
+.Login-form > input:disabled {
+    background: #f1f5f9;
+    cursor: not-allowed;
+}
+
+/* Forgot password */
+
+.Login-form-link {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2px;
+}
+
+.Login-page a {
+    color: var(--login-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.Login-page a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.Login-page a:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 25%);
+    outline-offset: 4px;
+    border-radius: 3px;
+}
+
+/* Submit button */
+
+.Login-button {
+    width: 100%;
+    min-height: 49px;
+    padding: 13px 18px;
+
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    background: var(--login-primary);
+    color: #ffffff;
+
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background-color 150ms ease,
+        transform 150ms ease;
+}
+
+.Login-button:hover:not(:disabled) {
+    background: var(--login-primary-hover);
+}
+
+.Login-button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.Login-button:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 28%);
+    outline-offset: 3px;
+}
+
+.Login-button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Error feedback */
+
+.Login-error {
+    margin-bottom: 22px;
+    padding: 13px 15px;
+
+    border: 1px solid #fecdca;
+    border-radius: 10px;
+
+    background: var(--login-error-bg);
+    color: var(--login-error);
+
+    font-size: 0.9rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* Signup footer */
+
+.Signup-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    margin-top: 28px;
+    padding-top: 22px;
+
+    border-top: 1px solid #eef2f7;
+    text-align: center;
+}
+
+.Signup-navigation p {
+    margin: 0;
+    color: var(--login-muted);
+    font-size: 0.9rem;
+}
+
+/* Mobile layout */
+
+@media (max-width: 480px) {
+    .Login-page {
+        padding: 20px 14px;
+    }
+
+    .Login-card {
+        padding: 26px 21px;
+        border-radius: 16px;
+    }
+
+    .Login-header {
+        margin-bottom: 25px;
+    }
+
+    .Signup-navigation {
+        margin-top: 24px;
+    }
+}
+
+/* Respect reduced-motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+    .Login-page *,
+    .Login-page *::before,
+    .Login-page *::after {
+        transition: none;
+    }
+}

@@ -2,7 +2,7 @@ const Job = require("../../models/job");
 const AppError = require("../../utils/AppError");
 const User = require("../../models/User");
 const workflow = require("../../utils/workflow")
-const withTransaction = require("../../infrastructure/transactions/transaction")
+const {withTransaction }= require("../../infrastructure/transactions/transaction");
 const outboxEvent = require("../../infrastructure/outbox/outbox.service");
 
 // ========================================================================================================================================
@@ -352,7 +352,7 @@ exports.Accepted = async(job,user)=>{
 
             fromStatus:"Assigned",
 
-            toStatus: "WorkAccepted",
+            toStatus: "WorkerAccepted",
 
             actorId:user.id.toString(),
 

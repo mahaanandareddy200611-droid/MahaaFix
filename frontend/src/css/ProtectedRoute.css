@@ -1,0 +1,87 @@
+
+.route-state {
+    box-sizing: border-box;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 24px;
+
+    display: grid;
+    place-items: center;
+
+    background: #f5f7fc;
+    color: #17233d;
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+.route-state-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 32px;
+
+    border: 1px solid #dbe3ef;
+    border-radius: 16px;
+
+    background: #ffffff;
+    box-shadow: 0 12px 36px rgb(23 35 61 / 6%);
+}
+
+.route-state-card h1 {
+    margin-top: 0;
+    font-size: 1.6rem;
+    line-height: 1.3;
+}
+
+.route-state-card p {
+    color: #64748b;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.route-state-card button,
+.route-state-card a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+    margin: 8px 8px 0 0;
+    padding: 10px 16px;
+
+    border: 1px solid #2457d6;
+    border-radius: 9px;
+
+    background: #2457d6;
+    color: #ffffff;
+
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.route-state-card .route-state-secondary {
+    border-color: #dbe3ef;
+    background: #ffffff;
+    color: #17233d;
+}
+
+.route-state-card button:focus-visible,
+.route-state-card a:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 25%);
+    outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+    .route-state {
+        padding: 16px;
+    }
+
+    .route-state-card {
+        padding: 24px 20px;
+    }
+}

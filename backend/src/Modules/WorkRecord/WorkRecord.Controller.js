@@ -1,5 +1,8 @@
 const asyncHandler = require("../../middleware/asyncHandler");
 const WorkRecordService = require("./WorkRecord.Service")
+const executeIdempotant = require(
+    "../../infrastructure/idempotency/idempotancy.execution.service"
+);
 
 // GET ALL
 exports.allWorkRecords= asyncHandler(async (req,res) => {
@@ -13,21 +16,47 @@ exports.allWorkRecords= asyncHandler(async (req,res) => {
 })
 
 // CREATE
-exports.createWorkRecord= asyncHandler(async (req,res) => {
+exports.createWorkRecord = asyncHandler(async (req, res) => {
 
-    const postWorkRecord = await(WorkRecordService.createWorkRecordService(req.body,req.user,idempotencyKey))
-    // console.log("BODY:", req.body);
-    // console.log("AUTH USER:", req.user);
-    // console.log("IDEMPOTENCY KEY:", idempotencyKey);
-    return res.status(201).json({
-        success:true,
-        data:postWorkRecord,
-        message:"successfully , workRecord created",
-    })
-})
+    const result = await executeIdempotant({
+
+        idempotancy: req.idempotancy.idempotancyKey,
+
+        operation: async (session) => {
+
+            const record =
+                await WorkRecordService.createWorkRecordService(
+                    req.body,
+                    req.user,
+                    session
+                );
+
+            return {
+                statusCode: 201,
+
+                body: {
+                    success: true,
+
+                    data: record,
+
+                    message: "WorkRecord created successfully"
+                }
+            };
+        }
+    });
+
+    if (result.replayed) {
+        res.set("Idempotency-Replayed", "true");
+    }
+
+    return res
+        .status(result.statusCode)
+        .json(result.body);
+
+});
 
 exports.getmyWorkRecords= asyncHandler(async (req,res) => {
-    const getmyWorkRecord = await(WorkRecordService.WorkRecord(req.user,req.query)) 
+    const getmyWorkRecord = await(WorkRecordService.getmyWorkRecord(req.user,req.query)) 
     return res.status(200).json({
         success:true,
         data:getmyWorkRecord,
