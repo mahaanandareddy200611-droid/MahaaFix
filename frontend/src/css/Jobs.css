@@ -427,3 +427,59 @@
     outline: 3px solid rgb(36 87 214 / 25%);
     outline-offset: 3px;
 }
+.jobs-view-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 24px;
+    padding: 5px;
+    border: 1px solid #dbe3ef;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.jobs-view-tabs button {
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #475569;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.jobs-view-tabs button.is-selected {
+    border-color: #dbeafe;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.jobs-view-tabs button:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 25%);
+    outline-offset: 2px;
+}
+
+.jobs-back-link {
+    color: #2457d6;
+    font-size: 0.9rem;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.jobs-back-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+    .jobs-view-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .jobs-view-tabs button {
+        padding-inline: 8px;
+    }
+}

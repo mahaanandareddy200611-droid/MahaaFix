@@ -2,6 +2,7 @@ const User = require("../../models/User")
 const asyncHandler = require("../../middleware/asyncHandler");
 const authservice = require("../Auth/Auth.Service");
 
+
 // const bcrypt = require("bcryptjs")
 // const AppError = require("../../utils/AppError")
 
@@ -107,3 +108,16 @@ exports.workerOffline = asyncHandler(async(req,res)=>{
         message:"now you are offline, you never get new jobs in this state"
     })
 })
+exports.getOnlineWorkers = asyncHandler(
+    async (req, res) => {
+        const workers = await authService.getOnlineWorkers(
+            req.user
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Online workers fetched successfully",
+            data: workers
+        });
+    }
+);

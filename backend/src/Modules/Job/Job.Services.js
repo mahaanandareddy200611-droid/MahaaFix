@@ -5,6 +5,9 @@ const workflow = require("../../utils/workflow")
 const {withTransaction }= require("../../infrastructure/transactions/transaction");
 const outboxEvent = require("../../infrastructure/outbox/outbox.service");
 const Media = require("../../models/Media");
+const {
+    WORKER_HEARTBEAT_TTL_MS,
+} = require("../../config/presence");
 
 // ========================================================================================================================================
 //                                                 create jobs
@@ -104,36 +107,89 @@ if (normalizedBeforeMedia.length > 0) {
 //                                                my jobs  self created or done
 // =====================================================================================================================================
 
-exports.myJobs=async(user,query)=>{
-    const page = Number(query.page)||0
-    const filter = {
-        status :{$in:["Created","Verified"]}
+exports.myJobs = async (user, query = {}) => {
+    if (!user) {
+        throw new AppError("Unauthorized", 401);
     }
-    if(query.category){
-        filter.category=query.category
+
+    const roles = ["customer", "worker", "admin", "operator"];
+    const role = String(user.role || "").toLowerCase();
+
+    if (!roles.includes(role)) {
+        throw new AppError("Access denied", 403);
     }
-    if(query.subCategory){
-        filter.subCategory = query.subCategory
+
+    const requestedPage = Number.parseInt(query.page, 10);
+    const page =
+        Number.isInteger(requestedPage) && requestedPage >= 0
+            ? requestedPage
+            : 0;
+
+    const limit = 20;
+    const filter = {};
+
+    // Scope ordinary accounts to their own jobs.
+    if (role === "worker") {
+        filter["worker.workerid"] = user.id;
+    } else if (role === "customer") {
+        filter["customer.userid"] = user.id;
     }
-    if(query.city){
-        filter["address.city"] = query.city;    }
 
-        let jobs;
+    // Admin and operator can inspect jobs across accounts.
+    if (query.category) {
+        filter.category = query.category;
+    }
 
-    if(user.role === "worker"){
-            jobs = await Job.find({"worker.workerid":user.id,...filter}).select("title category subCategory address.city address.street").limit(20).skip(page*10)
-        }
-    else if (user.role==="customer") {
-            jobs = await Job.find({"customer.userid":user.id,...filter}).select("title category subCategory address.city").limit(20).skip(page*10)
-            
-        }
-    else if(user.role==="admin"||user.role=="operator"){
-            jobs= await Job.find(filter).select("title category subCategory address.city address.street userid workerid").limit(20).skip(page*10)
-        }
-    
+    if (query.subCategory) {
+        filter.subCategory = query.subCategory;
+    }
 
-    return jobs
-}
+    if (query.status) {
+        const allowedStatuses = [
+            "Created",
+            "Assigned",
+            "WorkerAccepted",
+            "Checking",
+            "EstimateSubmitted",
+            "WaitingCustomerApproval",
+            "TemporaryFixApproved",
+            "InProgress",
+            "WorkCompleted",
+            "VerificationPending",
+            "Verified",
+            "ReworkRequired",
+            "Reject",
+        ];
+
+        if (!allowedStatuses.includes(query.status)) {
+            throw new AppError("Invalid job status filter", 400);
+        }
+
+        filter.status = query.status;
+    }
+
+    if (query.city) {
+        const escapedCity = String(query.city)
+            .trim()
+            .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+        if (escapedCity) {
+            filter["address.city"] = {
+                $regex: escapedCity,
+                $options: "i",
+            };
+        }
+    }
+
+    return Job.find(filter)
+        .select(
+            "title description category subCategory status address.city address.street customer.userid customer.name worker.workerid worker.name worker.mobileNumber payments.budget createdAt updatedAt"
+        )
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(page * limit)
+        .limit(limit)
+        .lean();
+};
 
 
 // ========================================================================================================================================
@@ -195,17 +251,30 @@ exports.AssignJob = async (job, workerId,user) => {
     return withTransaction(async(session)=>{
 
     const worker = await User.findOne({
-        _id: workerId,
-        role: "worker"
-    }).select("_id name mobileNumber isOnline");
+    _id: workerId,
+    role: "worker",
+}).select(
+    "_id name mobileNumber isOnline lastHeartbeat"
+);
 
-    if (!worker) {
-        throw new AppError("Worker not found", 404);
-    }
+if (!worker) {
+    throw new AppError("Worker not found", 404);
+}
 
-    if (!worker.isOnline) {
-        throw new AppError("Worker is currently offline", 409);
-    }
+const cutoff = new Date(
+    Date.now() - WORKER_HEARTBEAT_TTL_MS
+);
+
+const hasRecentHeartbeat =
+    worker.lastHeartbeat &&
+    worker.lastHeartbeat >= cutoff;
+
+if (!worker.isOnline || !hasRecentHeartbeat) {
+    throw new AppError(
+        "Worker is offline or their heartbeat is stale",
+        409
+    );
+}
 
     const updatedJob = await Job.findOneAndUpdate(
         {

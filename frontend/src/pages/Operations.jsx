@@ -1,6 +1,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getOnlineWorkers } from "../services/user.service";
 
 import { useAuth } from "../context/AuthContext";
 import {
@@ -28,6 +29,11 @@ function Operations() {
     const [errorMessage, setErrorMessage] = useState("");
     const [notice, setNotice] = useState("");
     const [reloadVersion, setReloadVersion] = useState(0);
+
+    const [onlineWorkers, setOnlineWorkers] = useState([]);
+    const [workersLoading, setWorkersLoading] = useState(false);
+    const [workersError, setWorkersError] = useState("");
+    const [workersRefreshVersion, setWorkersRefreshVersion] = useState(0);
 
     const loadJobs = useCallback(async (signal) => {
         setLoading(true);
@@ -87,6 +93,80 @@ function Operations() {
         return () => controller.abort();
     }, [loadJobs, reloadVersion]);
 
+    useEffect(() => {
+        if (!canAssign) {
+            setOnlineWorkers([]);
+            setWorkersError("");
+            setWorkersLoading(false);
+            return undefined;
+        }
+
+        let active = true;
+        let requestInFlight = false;
+        const controller = new AbortController();
+
+        async function refreshWorkers() {
+            if (requestInFlight) return;
+
+            requestInFlight = true;
+            setWorkersLoading(true);
+
+            try {
+                const response = await getOnlineWorkers({
+                    signal: controller.signal,
+                });
+
+                const result = response.data?.data;
+
+                if (!Array.isArray(result)) {
+                    throw new Error(
+                        "The online-worker API returned invalid data."
+                    );
+                }
+
+                if (active) {
+                    setOnlineWorkers(result);
+                    setWorkersError("");
+                }
+            } catch (error) {
+                if (
+                    !active ||
+                    controller.signal.aborted ||
+                    error.code === "ERR_CANCELED"
+                ) {
+                    return;
+                }
+
+                // Do not leave previously listed workers selectable after a failed refresh.
+                setOnlineWorkers([]);
+                setWorkersError(
+                    error.response?.status === 403
+                        ? "Your account isn't authorized to view online workers. Check the admin role and ADMIN_EMAIL allowlist."
+                        : error.response?.data?.message ||
+                            "Unable to load online workers."
+                );
+            } finally {
+                requestInFlight = false;
+
+                if (active) {
+                    setWorkersLoading(false);
+                }
+            }
+        }
+
+        void refreshWorkers();
+
+        const interval = setInterval(() => {
+            void refreshWorkers();
+        }, 30_000);
+
+        return () => {
+            active = false;
+            controller.abort();
+            clearInterval(interval);
+        };
+    }, [canAssign, workersRefreshVersion]);
+
     function handleFilterChange(event) {
         const { name, value } = event.target;
 
@@ -104,8 +184,14 @@ function Operations() {
         const id = String(job._id || job.id || "");
         const workerId = (workerIds[id] || "").trim();
 
-        if (!workerId) {
-            setErrorMessage("Enter the worker's user ID.");
+        const selectedWorker = onlineWorkers.find(
+            (worker) => String(worker._id) === workerId
+        );
+
+        if (!selectedWorker) {
+            setErrorMessage(
+                "Select a worker from the current online-worker list."
+            );
             return;
         }
 
@@ -128,8 +214,9 @@ function Operations() {
                 `Job "${job.title}" was assigned successfully.`
             );
 
-            // Created jobs disappear from the available list once assigned.
+            // Assigned jobs disappear from the available list. Refresh both lists.
             await loadJobs();
+            setWorkersRefreshVersion((value) => value + 1);
         } catch (error) {
             const status = error.response?.status;
 
@@ -203,6 +290,81 @@ function Operations() {
                         <strong>{page + 1}</strong>
                     </div>
                 </section>
+
+                {canAssign && (
+                    <section className="operations-workers-panel">
+                        <header className="operations-workers-heading">
+                            <div>
+                                <h2>Online workers</h2>
+                                <p>
+                                    Only workers with recent heartbeats are listed.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="operations-secondary"
+                                disabled={workersLoading}
+                                onClick={() =>
+                                    setWorkersRefreshVersion((value) => value + 1)
+                                }
+                            >
+                                Refresh workers
+                            </button>
+                        </header>
+
+                        {workersLoading && (
+                            <p role="status">Checking worker availability...</p>
+                        )}
+
+                        {workersError && (
+                            <p className="operations-error" role="alert">
+                                {workersError}
+                            </p>
+                        )}
+
+                        {!workersLoading &&
+                            !workersError &&
+                            onlineWorkers.length === 0 && (
+                                <div className="operations-empty">
+                                    No workers are currently online.
+                                </div>
+                            )}
+
+                        <div className="operations-workers-grid">
+                            {onlineWorkers.map((worker) => (
+                                <article
+                                    className="operations-worker-card"
+                                    key={worker._id}
+                                >
+                                    <div className="operations-worker-name">
+                                        <span
+                                            className="operations-online-dot"
+                                            aria-hidden="true"
+                                        />
+                                        <strong>{worker.name}</strong>
+                                    </div>
+
+                                    <p>{worker.mobileNumber}</p>
+
+                                    <div className="operations-worker-id">
+                                        <span>Worker ID</span>
+                                        <code>{worker._id}</code>
+                                    </div>
+
+                                    <small>
+                                        Last heartbeat: {" "}
+                                        {worker.lastHeartbeat
+                                            ? new Date(
+                                                worker.lastHeartbeat
+                                            ).toLocaleTimeString()
+                                            : "Not available"}
+                                    </small>
+                                </article>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 <section className="operations-filters">
                     <h2>Filter available jobs</h2>
@@ -357,10 +519,10 @@ function Operations() {
                                             }
                                         >
                                             <label htmlFor={`worker-${id}`}>
-                                                Worker user ID
+                                                Assign to online worker
                                             </label>
 
-                                            <input
+                                            <select
                                                 id={`worker-${id}`}
                                                 value={workerIds[id] || ""}
                                                 onChange={(event) =>
@@ -369,10 +531,30 @@ function Operations() {
                                                         [id]: event.target.value,
                                                     }))
                                                 }
-                                                placeholder="MongoDB user ID"
                                                 required
-                                                disabled={busyJobId === id}
-                                            />
+                                                disabled={
+                                                    workersLoading ||
+                                                    Boolean(busyJobId) ||
+                                                    onlineWorkers.length === 0
+                                                }
+                                            >
+                                                <option value="">
+                                                    Select a worker
+                                                </option>
+
+                                                {onlineWorkers.map((worker) => (
+                                                    <option
+                                                        key={worker._id}
+                                                        value={worker._id}
+                                                    >
+                                                        {worker.name} — {worker.mobileNumber} — {worker._id}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                            <small>
+                                                The backend checks availability again when you assign.
+                                            </small>
 
                                             <button
                                                 className="operations-primary"

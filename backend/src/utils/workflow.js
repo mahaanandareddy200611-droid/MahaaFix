@@ -19,9 +19,9 @@ const workflow ={
     //     next:["WaitingCustomerApproval","TemporaryFixApproved","Reject"],
     //     actor:["worker"]
     // },
-    WaitingCustomerApproval:{
-   next:["TemporaryFixApproved","InProgress"], //"InspectionCompleted"
-   actor:["customer","admin","operator"]
+   WaitingCustomerApproval: {
+    next: ["TemporaryFixApproved", "InProgress", "Reject"],
+    actor: ["customer", "admin", "operator"],
 },
     TemporaryFixApproved:{
         next:["InProgress"],

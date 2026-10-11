@@ -382,3 +382,154 @@
         transition: none;
     }
 }
+
+
+.operations-workers-panel {
+    margin-bottom: 24px;
+    padding: 22px;
+    border: 1px solid #dbe3ef;
+    border-radius: 15px;
+    background: #ffffff;
+}
+
+.operations-workers-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.operations-workers-heading h2 {
+    margin: 0;
+    font-size: 1.08rem;
+}
+
+.operations-workers-heading p {
+    margin: 7px 0 0;
+    color: #64748b;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.operations-workers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 13px;
+}
+
+.operations-worker-card {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #dbe3ef;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.operations-worker-name {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    overflow-wrap: anywhere;
+}
+
+.operations-worker-name strong {
+    font-size: 0.92rem;
+}
+
+.operations-online-dot {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #12b76a;
+}
+
+.operations-worker-card p {
+    margin: 10px 0;
+    color: #475569;
+    font-size: 0.85rem;
+}
+
+.operations-worker-id {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    margin: 12px 0;
+}
+
+.operations-worker-id span {
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+.operations-worker-id code {
+    padding: 8px;
+    border-radius: 7px;
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 0.73rem;
+    overflow-wrap: anywhere;
+    user-select: all;
+}
+
+.operations-worker-card > small {
+    display: block;
+    color: #64748b;
+    font-size: 0.75rem;
+    line-height: 1.6;
+}
+
+.operations-assign-form select {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #17233d;
+    font: inherit;
+    font-size: 0.85rem;
+}
+
+.operations-assign-form select:focus-visible {
+    outline: 3px solid rgb(36 87 214 / 18%);
+    outline-offset: 1px;
+    border-color: #2457d6;
+}
+
+.operations-assign-form select:disabled {
+    background: #f1f5f9;
+    cursor: not-allowed;
+}
+
+.operations-assign-form small {
+    color: #64748b;
+    font-size: 0.76rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+    .operations-workers-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 540px) {
+    .operations-workers-panel {
+        padding: 16px;
+    }
+
+    .operations-workers-heading {
+        flex-direction: column;
+    }
+
+    .operations-workers-heading button {
+        width: 100%;
+    }
+
+    .operations-workers-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

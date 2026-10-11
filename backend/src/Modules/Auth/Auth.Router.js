@@ -7,7 +7,7 @@ const {signup , login,forgotPassword:forgotPass,newpassword:password ,otp} = req
 const validate  = require("../../utils/validate");
 
 const {Login ,Signup,forgotPassword,verifyResetOtp,newPassword,
-    workerOnline,workerHeartbeat,workerOffline
+    workerOnline,workerHeartbeat,workerOffline,getOnlineWorkers
 }= require("./Auth.Contoller");
 
 const idempotancyMiddleware = require("../../infrastructure/idempotency/idempotancy.middleware");
@@ -30,6 +30,11 @@ authentication.post("/heartbeat",Auth,workerHeartbeat)
 // frontend sends with after some time if worker is online or not 
 
 authentication.post("/offline",Auth,idempotancyMiddleware,workerOffline)
-// makes offline  
+// makes offline 
+authentication.get(
+    "/online-workers",
+    Auth,
+    getOnlineWorkers
+); 
 
 module.exports=authentication

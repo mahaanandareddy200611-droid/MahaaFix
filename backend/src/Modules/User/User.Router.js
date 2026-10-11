@@ -1,12 +1,22 @@
-    const express = require("express");
+const express = require("express");
 
-    const userroutes= express.Router();
+const userroutes = express.Router();
 
-    const {profile} =  require("./User.Controller");
+const {
+    profile,
+    listOnlineWorkers,
+} = require("./User.Controller");
 
-    const Auth = require("../../middleware/Auth");
+const Auth = require("../../middleware/Auth");
+const isAdmin = require("../../middleware/isAdmin");
 
-    userroutes.get("/",Auth,profile);
+userroutes.get(
+    "/online-workers",
+    Auth,
+    isAdmin,
+    listOnlineWorkers
+);
 
-    module.exports=userroutes;
-        
+userroutes.get("/", Auth, profile);
+
+module.exports = userroutes;

@@ -1,5 +1,8 @@
 const AppError = require("../../utils/AppError");
 const User = require("../../models/User");
+const {
+    WORKER_HEARTBEAT_TTL_MS,
+} = require("../../config/presence");
 
 exports.profile=async(user)=>{
     // fetech currect user details
@@ -14,3 +17,25 @@ exports.profile=async(user)=>{
 
         return findUser
 }
+
+exports.getOnlineWorkers = async () => {
+    const cutoff = new Date(
+        Date.now() - WORKER_HEARTBEAT_TTL_MS
+    );
+
+    return User.find({
+        role: "worker",
+        isOnline: true,
+        lastHeartbeat: {
+            $gte: cutoff,
+        },
+    })
+        .select(
+            "_id name mobileNumber isOnline lastSeen lastHeartbeat WorkRecordsCount"
+        )
+        .sort({
+            lastHeartbeat: -1,
+        })
+        .limit(100)
+        .lean();
+};

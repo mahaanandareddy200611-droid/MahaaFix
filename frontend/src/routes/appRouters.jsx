@@ -58,15 +58,10 @@ function AppRoutes() {
 
                 {/* All authenticated users */}
                 <Route element={<ProtectedRoute />}>
-                    <Route
-                        path="/dashboard"
-                        element={<Dashboard />}
-                    />
-
-                    <Route
-                        path="/profile"
-                        element={<Profile />}
-                    />
+                    <Route path="/dashboard" element={<Dashboard />} />
+    <Route path="/jobs" element={<Jobs />} />
+    <Route path="/jobs/:id" element={<JobDetails />} />
+    <Route path="/profile" element={<Profile />} />
 
                     
 

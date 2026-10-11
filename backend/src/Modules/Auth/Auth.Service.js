@@ -267,3 +267,27 @@ exports.workerOffline=async(user)=>{
         isOnline:false
     }
 }
+
+
+
+exports.getOnlineWorkers = async (user) => {
+    if (!user?.id || user.role !== "admin") {
+        throw new AppError(
+            "Only admins can view online workers",
+            403
+        );
+    }
+
+    const workers = await User.find({
+        role: "worker",
+        isOnline: true,
+        lastHeartbeat: {
+            $gte: new Date(Date.now() - 60 * 1000)
+        }
+    })
+        .select("_id name mobileNumber lastHeartbeat")
+        .sort({ lastHeartbeat: -1 })
+        .lean();
+
+    return workers;
+};

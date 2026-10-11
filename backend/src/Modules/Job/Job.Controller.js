@@ -251,7 +251,11 @@ exports.EstimateSubmitted = asyncHandler(async (req, res) => {
 exports.Approval =asyncHandler( async (req,res) =>{
 
         const { decision }= req.body 
-        const allowed = [  "TemporaryFixApproved","InProgress",]//"InspectionCompleted"
+        const allowed = [
+    "TemporaryFixApproved",
+    "InProgress",
+    "Reject",
+];//"InspectionCompleted"
         if(!allowed.includes(decision)){
             throw new AppError("wrong responce",400);           
         }
