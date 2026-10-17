@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "redis:check": "node src/scripts/redis-smoke-test.js",
+    "queue:worker": "node src/workers/mahaafix-events.worker.js",
+"queue:smoke": "node src/scripts/queue-smoke-test.js"
   },
   "keywords": [],
   "author": "",
@@ -24,7 +27,8 @@
     "mongoose": "^9.6.1",
     "multer": "^2.3.0",
     "nodemailer": "^10.0.13",
-    "openai": "^6.48.0"
+    "openai": "^6.48.0",
+    "redis": "^6.3.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
