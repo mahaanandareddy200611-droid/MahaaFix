@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test \"test/**/*.test.js\"",
     "redis:check": "node src/scripts/redis-smoke-test.js",
     "queue:worker": "node src/workers/mahaafix-events.worker.js",
 "queue:smoke": "node src/scripts/queue-smoke-test.js"

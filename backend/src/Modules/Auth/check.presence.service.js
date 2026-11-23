@@ -1,28 +1,27 @@
-const User = require("../../models/User")
+const User = require("../../models/User");
 
-
-const HEARTBEAT_TIMEOUT_MS = 60 * 1000;
+const {
+    getHeartbeatCutoff,
+} = require("../../config/presence");
 
 setInterval(async () => {
     try {
-        const timeout = new Date(
-            Date.now() - HEARTBEAT_TIMEOUT_MS
-        );
+        const timeout = getHeartbeatCutoff();
 
         await User.updateMany(
-            {
-                role: "worker",
-                isOnline: true,
-                lastHeartbeat: {
-                    $lt: timeout
-                }
-            },
-            {
-                $set: {
-                    isOnline: false
-                }
-            }
-        );
+    {
+        role: "worker",
+        isOnline: true,
+        lastHeartbeat: {
+            $lt: timeout,
+        },
+    },
+    {
+        $set: {
+            isOnline: false,
+        },
+    }
+);
     } catch (error) {
         console.error(
             "Worker presence cleanup failed",

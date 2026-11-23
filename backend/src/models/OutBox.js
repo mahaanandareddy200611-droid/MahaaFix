@@ -26,16 +26,17 @@ const OutBoxSchema = new mongoose.Schema(
         },
 
         status: {
-            type: String,
-            enum: [
-                "PENDING",
-                "PROCESSING",
-                "COMPLETED",
-                "FAILED"
-            ],
-            default: "PENDING",
-            required: true
-        },
+    type: String,
+    enum: [
+        "PENDING",
+        "PROCESSING",
+        "PUBLISHED",
+        "COMPLETED",
+        "FAILED"
+    ],
+    default: "PENDING",
+    required: true
+},
 
         attempts: {
             type: Number,
@@ -59,9 +60,14 @@ const OutBoxSchema = new mongoose.Schema(
         },
 
         processedAt: {
-            type: Date,
-            default: null
-        },
+    type: Date,
+    default: null
+},
+
+publishedAt: {
+    type: Date,
+    default: null
+},
 
         lastError: {
             type: String,
@@ -94,7 +100,11 @@ OutBoxSchema.index({
     aggregateType: 1,
     aggregateId: 1
 });
-
+OutBoxSchema.index({
+    status: 1,
+    lockedAt: 1,
+    attempts: 1
+});
 
 const OutBox = mongoose.model(
     "OutBox",
