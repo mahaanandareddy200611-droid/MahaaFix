@@ -1,93 +1,163 @@
 require("dotenv").config();
 
-const { Worker } = require("bullmq");
+const {
+    Worker,
+    UnrecoverableError,
+} = require("bullmq");
+
+const connectDB = require("../config/db");
 
 const {
-    getRedisConnectionOptions
+    getRedisConnectionOptions,
 } = require("../infrastructure/redis/redis.connection");
 
 const {
-    EVENT_QUEUE_NAME
+    EVENT_QUEUE_NAME,
 } = require("../infrastructure/queue/queue.constants");
 
+const {
+    createOutboxConsumer,
+} = require(
+    "../infrastructure/outbox/outbox-consumer.service"
+);
 
-async function processEvent(job) {
-    console.log(
-        `[Worker] Received job: ${job.name}, ID: ${job.id}`
-    );
-
-    switch (job.name) {
-        case "QUEUE_SMOKE_TEST": {
-            console.log(
-                "[Worker] Test payload:",
-                job.data
-            );
-
-            return {
-                success: true,
-                processedAt: new Date().toISOString()
-            };
-        }
-
-        default:
-            throw new Error(
-                `No handler registered for job type: ${job.name}`
-            );
-    }
-}
-
-
-const worker = new Worker(
-    EVENT_QUEUE_NAME,
-    processEvent,
-    {
-        connection: getRedisConnectionOptions({
-            worker: true
-        }),
-
-        // Initially, process no more than five jobs concurrently.
-        concurrency: 5
-    }
+const {
+    InvalidOutboxMessageError,
+} = require(
+    "../infrastructure/outbox/outbox-consumer.service"
 );
 
 
-worker.on("ready", () => {
+async function startWorker() {
+    await connectDB();
+
+    const outboxConsumer =
+        createOutboxConsumer();
+
+    const worker = new Worker(
+        EVENT_QUEUE_NAME,
+
+        async function processEvent(job) {
+            switch (job.name) {
+                case "QUEUE_SMOKE_TEST": {
+                    console.log(
+                        "[Worker] Smoke-test job received",
+                        {
+                            jobId: job.id,
+                        }
+                    );
+
+                    return {
+                        success: true,
+                        processedAt:
+                            new Date().toISOString(),
+                    };
+                }
+
+                case "OUTBOX_EVENT": {
+                    try {
+                        return await
+                            outboxConsumer.receiveOutboxEvent(
+                                job.data
+                            );
+                    } catch (error) {
+                        if (
+                            error.permanent ||
+                            error instanceof
+                                InvalidOutboxMessageError
+                        ) {
+                            throw new UnrecoverableError(
+                                error.message
+                            );
+                        }
+
+                        // Database or infrastructure failures
+                        // remain eligible for BullMQ retries.
+                        throw error;
+                    }
+                }
+
+                default:
+                    throw new UnrecoverableError(
+                        `Unsupported queue job: ${job.name}`
+                    );
+            }
+        },
+
+        {
+            connection:
+                getRedisConnectionOptions({
+                    worker: true,
+                }),
+
+            concurrency: 5,
+        }
+    );
+
+    worker.on("ready", () => {
+        console.log(
+            `[Worker] Listening on queue: ${EVENT_QUEUE_NAME}`
+        );
+    });
+
+    worker.on("completed", (job, result) => {
+        console.log(
+            `[Worker] Job ${job.id} completed`,
+            result
+        );
+    });
+
+    worker.on("failed", (job, error) => {
+        console.error(
+            `[Worker] Job ${job?.id} failed:`,
+            error.message
+        );
+    });
+
+    worker.on("error", (error) => {
+        console.error(
+            "[Worker] Runtime error:",
+            error.message
+        );
+    });
+
+    await worker.waitUntilReady();
+
     console.log(
-        `[Worker] Listening on queue: ${EVENT_QUEUE_NAME}`
+        "[Worker] Redis connection is ready"
     );
-});
+
+    return worker;
+}
 
 
-worker.on("completed", (job, result) => {
-    console.log(
-        `[Worker] Job ${job.id} completed`,
-        result
-    );
-});
-
-
-worker.on("failed", (job, error) => {
-    console.error(
-        `[Worker] Job ${job?.id} failed:`,
-        error.message
-    );
-});
-
-
-worker.on("error", (error) => {
-    console.error(
-        "[Worker] Runtime error:",
-        error.message
-    );
-});
+let activeWorker = null;
+let shuttingDown = false;
 
 
 async function shutdown(signal) {
-    console.log(`[Worker] Received ${signal}; shutting down`);
+    if (shuttingDown) {
+        return;
+    }
+
+    shuttingDown = true;
+
+    console.log(
+        `[Worker] Received ${signal}; shutting down`
+    );
 
     try {
-        await worker.close();
-        console.log("[Worker] Shutdown complete");
+        if (activeWorker) {
+            await activeWorker.close();
+        }
+
+        const mongoose = require("mongoose");
+
+        await mongoose.disconnect();
+
+        console.log(
+            "[Worker] Shutdown complete"
+        );
     } catch (error) {
         console.error(
             "[Worker] Shutdown failed:",
@@ -108,13 +178,17 @@ process.once("SIGTERM", () => {
 });
 
 
-worker.waitUntilReady()
-    .then(() => {
-        console.log("[Worker] Redis connection is ready");
+startWorker()
+    .then((worker) => {
+        activeWorker = worker;
+
+        if (shuttingDown) {
+            void shutdown("SHUTDOWN_REQUESTED");
+        }
     })
     .catch((error) => {
         console.error(
-            "[Worker] Could not initialize:",
+            "[Worker] Startup failed:",
             error.message
         );
 
